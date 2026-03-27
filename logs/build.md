@@ -226,6 +226,41 @@ None
 - Pydantic v2 with from_attributes=True for ORM mode
 - DB seed script at backend/db/seed.py for test data
 
+---
+
+## Task 7 — Celery Tasks + Beat Scheduler
+**Status**: ✅ Complete
+**Date**: 2026-03-28
+
+### Files Created
+- backend/tasks/__init__.py
+- backend/tasks/celery_app.py
+- backend/tasks/ingestion_tasks.py
+- backend/tasks/scoring_tasks.py
+- docker-compose.yml (updated — 6 services)
+- backend/db/session.py (updated — added new_session() for Celery)
+
+### Test Results
+- [x] all 6 docker services start → pass ✅
+- [x] celery-beat shows registered tasks → pass ✅
+- [x] celery-worker shows 3 registered tasks → pass ✅
+- [x] ingest_cloud_health manual trigger → succeeded, 0 events (no incidents) ✅
+- [x] ingest_all manual trigger → succeeded, 102 events inserted ✅
+- [x] score_all_regions manual trigger → succeeded, 30 regions scored (0 CRITICAL) ✅
+- [x] beat schedule configured: cloud_health@2min, ingest_all@5min, scoring@5min ✅
+
+### Errors Encountered
+**Error**: `RuntimeError: got Future attached to a different loop`
+**File**: backend/tasks/scoring_tasks.py, backend/db/session.py
+**Fix Applied**: Created `new_session()` context manager in session.py that builds a fresh engine per call — avoids event loop conflicts in Celery prefork workers.
+**Fix Status**: ✅ Resolved
+
+### Notes
+- Celery worker uses prefork with 4 concurrency.
+- Each task creates a fresh SQLAlchemy engine via new_session() to avoid asyncpg loop conflicts.
+- EONET returned 500, GDELT returned 429 — both handled gracefully (logged + skipped).
+
+
 
 
 

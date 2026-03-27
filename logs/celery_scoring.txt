@@ -1,0 +1,10 @@
+﻿nimbusguard-celery-worker  |     await self._transaction.start()
+nimbusguard-celery-worker  |   File "/usr/local/lib/python3.11/site-packages/asyncpg/transaction.py", line 146, in start
+nimbusguard-celery-worker  |     await self._connection.execute(query)
+nimbusguard-celery-worker  |   File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 354, in execute
+nimbusguard-celery-worker  |     result = await self._protocol.query(query, timeout)
+nimbusguard-celery-worker  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+nimbusguard-celery-worker  |   File "asyncpg/protocol/protocol.pyx", line 369, in query
+nimbusguard-celery-worker  | RuntimeError: Task <Task pending name='Task-18' coro=<_score() running at /app/backend/tasks/scoring_tasks.py:29> cb=[_run_until_complete_cb() at /usr/local/lib/python3.11/asyncio/base_events.py:181]> got Future <Future pending cb=[BaseProtocol._on_waiter_completed()]> attached to a different loop
+nimbusguard-celery-worker  | [2026-03-27 21:20:18,666: INFO/MainProcess] Task backend.tasks.scoring_tasks.score_all_regions[3ababba7-7b57-4fbf-a3bf-13d34366053d] received
+nimbusguard-celery-worker  | [2026-03-27 21:20:18,677: INFO/ForkPoolWorker-4] Task backend.tasks.scoring_tasks.score_all_regions[3ababba7-7b57-4fbf-a3bf-13d34366053d] retry: Retry in 60s: RuntimeError("Task <Task pending name='Task-18' coro=<_score() running at /app/backend/tasks/scoring_tasks.py:29> cb=[_run_until_complete_cb() at /usr/local/lib/python3.11/asyncio/base_events.py:181]> got Future <Future pending cb=[BaseProtocol._on_waiter_completed()]> attached to a different loop")

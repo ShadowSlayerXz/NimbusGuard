@@ -61,5 +61,45 @@ services:
     depends_on:
       - backend
 
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nimbusguard-celery-worker
+    restart: unless-stopped
+    command: celery -A backend.tasks.celery_app worker --loglevel=info --concurrency=4
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-nimbusguard}:${POSTGRES_PASSWORD:-nimbusguard}@postgres:5432/${POSTGRES_DB:-nimbusguard}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nimbusguard-celery-beat
+    restart: unless-stopped
+    command: celery -A backend.tasks.celery_app beat --loglevel=info
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-nimbusguard}:${POSTGRES_PASSWORD:-nimbusguard}@postgres:5432/${POSTGRES_DB:-nimbusguard}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+
 volumes:
   pgdata:
