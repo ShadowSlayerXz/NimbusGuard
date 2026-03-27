@@ -5,6 +5,12 @@ from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.api.signals import router as signals_router
+from backend.api.risk import router as risk_router
+from backend.api.simulate import router as simulate_router
+from backend.api.workloads import router as workloads_router
+from backend.api.migrations import router as migrations_router
+
 app = FastAPI(
     title="NimbusGuard API",
     description="Multi-Cloud Resilience & Cost Optimization Platform",
@@ -20,6 +26,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ── Register API routers ────────────────────────────────
+app.include_router(signals_router)
+app.include_router(risk_router)
+app.include_router(simulate_router)
+app.include_router(workloads_router)
+app.include_router(migrations_router)
+
 
 @app.get("/health")
 async def health_check():
@@ -29,3 +42,4 @@ async def health_check():
         "error": None,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+

@@ -184,5 +184,48 @@ None
   when it has the best combined score (cost saving + low risk + no latency penalty).
 - All test data rolled back after assertions — no residual rows.
 
+---
+
+## Task 6 — FastAPI Routes
+**Status**: ✅ Complete
+**Date**: 2026-03-28
+
+### Files Created
+- backend/api/__init__.py (ok/err envelope helpers)
+- backend/api/signals.py
+- backend/api/risk.py
+- backend/api/simulate.py
+- backend/api/workloads.py
+- backend/api/migrations.py
+- backend/api/test_routes.py
+- backend/schemas/__init__.py
+- backend/schemas/risk_event.py
+- backend/schemas/region_risk_score.py
+- backend/schemas/workload.py
+- backend/schemas/simulation_result.py
+- backend/schemas/migration_log.py
+- backend/db/seed.py
+- backend/main.py (updated — registered all routers)
+
+### Test Results
+- [x] GET /api/signals → pass ✅
+- [x] GET /api/risk-scores → pass ✅
+- [x] POST /api/risk-scores/refresh → pass ✅
+- [x] POST /api/simulate → pass ✅
+- [x] GET /api/workloads → pass ✅
+- [x] POST /api/workloads → pass ✅
+- [x] GET /api/migrations → pass ✅
+- [x] PATCH /api/migrations/{id}/approve → pass ✅
+- [x] PATCH /api/migrations/{id}/execute → pass ✅
+
+### Errors Encountered
+None
+
+### Notes
+- All responses use envelope: { data, error, timestamp }
+- Pydantic v2 with from_attributes=True for ORM mode
+- DB seed script at backend/db/seed.py for test data
+
+
 
 
