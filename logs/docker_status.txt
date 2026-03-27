@@ -1,0 +1,5 @@
+﻿nimbusguard-frontend | Up About a minute | 0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+nimbusguard-backend | Up About a minute | 0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+nimbusguard-redis | Up About a minute (healthy) | 0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+nimbusguard-postgres | Up About a minute (healthy) | 0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+hms_db | Exited (0) 2 minutes ago | 
