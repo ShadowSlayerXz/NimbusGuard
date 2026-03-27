@@ -260,6 +260,45 @@ None
 - Each task creates a fresh SQLAlchemy engine via new_session() to avoid asyncpg loop conflicts.
 - EONET returned 500, GDELT returned 429 — both handled gracefully (logged + skipped).
 
+---
+
+## Task 8 — Frontend Scaffold + Risk Map
+**Status**: ✅ Complete
+**Date**: 2026-03-28
+
+### Files Created
+- frontend/src/lib/types.ts
+- frontend/src/lib/api.ts
+- frontend/src/lib/store.ts
+- frontend/src/lib/regionCoords.ts
+- frontend/src/components/NavBar.tsx
+- frontend/src/components/RiskMap.tsx
+- frontend/src/app/layout.tsx (updated)
+- frontend/src/app/globals.css (updated — dark theme)
+- frontend/src/app/page.tsx (dashboard)
+- frontend/src/app/map/page.tsx
+
+### Test Results
+- [x] Dashboard loads → pass ✅
+- [x] Summary cards show data → pass ✅ (30 regions, 10 signals)
+- [x] Signals table shows data → pass ✅ (usgs, noaa alerts)
+- [x] Map loads → pass ✅
+- [x] Colored markers visible → pass ✅ (30 green markers across all providers)
+- [x] Click marker → popup with breakdown → pass ✅ (GCP europe-west2 popup verified)
+- [x] Provider toggle works → pass ✅ (AWS filter shows 12 regions only)
+
+### Errors Encountered
+**Error**: Map rendered blank — no tiles or markers visible.
+**File**: frontend/src/app/map/page.tsx
+**Fix Applied**: Changed map container from `flex: 1` to `height: calc(100vh - 105px)` — Leaflet needs explicit height.
+**Fix Status**: ✅ Resolved
+
+### Notes
+- CartoDB dark tiles used instead of OSM for aesthetic consistency.
+- Leaflet dynamic import with `ssr: false` to avoid SSR hydration issues.
+- useSWR with 30s refresh for live data updates on both dashboard and map.
+
+
 
 
 
