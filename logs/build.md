@@ -129,4 +129,32 @@
 - Cloudflare ingester detects placeholder API keys and skips gracefully.
 - Cloud health ingesters degrade gracefully when APIs return non-JSON or errors.
 
+---
+
+## Task 4 — Risk Scoring Engine
+**Status**: ✅ Complete
+**Date**: 2026-03-28
+
+### Files Created
+- backend/core/__init__.py
+- backend/core/regions.py
+- backend/core/weights.py
+- backend/core/scoring.py
+- backend/core/test_scoring.py
+
+### Test Results
+- [x] composite_score for us-east-1 == 67 → pass ✅
+- [x] tier == "WARNING" → pass ✅
+- [x] signal_breakdown has all 4 categories → pass ✅
+- [x] eu-west-1 cyber score reflects 0.6 event → pass ✅
+
+### Errors Encountered
+None
+
+### Notes
+- Scores recomputed from last-24h RiskEvents; max severity per category (worst-case).
+- Weights: infrastructure=0.45, natural_disaster=0.30, geopolitical=0.15, cyber=0.10.
+- Always inserts new RegionRiskScore rows (TimescaleDB time-series, never overwrites).
+
+
 
