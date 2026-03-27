@@ -156,5 +156,33 @@ None
 - Weights: infrastructure=0.45, natural_disaster=0.30, geopolitical=0.15, cyber=0.10.
 - Always inserts new RegionRiskScore rows (TimescaleDB time-series, never overwrites).
 
+---
+
+## Task 5 — Simulation Engine
+**Status**: ✅ Complete
+**Date**: 2026-03-28
+
+### Files Created
+- backend/core/simulator.py
+- backend/core/test_simulator.py
+- backend/core/regions.py (updated — added REGION_COST_MULTIPLIERS, REGION_CONTINENT)
+
+### Test Results
+- [x] 3 workloads affected → pass ✅
+- [x] 3 migration recommendations → pass ✅
+- [x] all targets in NORMAL/WATCH tier → pass ✅
+- [x] resilience_score_after > before (22 → 78) → pass ✅
+- [x] ML Training Job → cost-saving migration (-$226.67/mo) → pass ✅
+- [x] cost_delta is non-zero float (-$366.00) → pass ✅
+
+### Errors Encountered
+None
+
+### Notes
+- Migration scoring formula: -0.5*cost + -0.3*latency + 0.2*risk_benefit.
+- Engine correctly picks same-provider us-east-2 over cross-provider candidates
+  when it has the best combined score (cost saving + low risk + no latency penalty).
+- All test data rolled back after assertions — no residual rows.
+
 
 
