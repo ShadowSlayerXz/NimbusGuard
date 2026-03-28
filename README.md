@@ -298,4 +298,3 @@ NimbusGuard/
 
 ---
 
-Built at National Space Hackathon 2026 — IIT Delhi
