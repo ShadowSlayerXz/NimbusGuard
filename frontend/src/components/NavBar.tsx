@@ -6,9 +6,12 @@ import LiveBadge from "./LiveBadge"
 
 const links = [
   { href: "/", label: "Cost Intel" },
+  { href: "/anomalies", label: "Anomalies" },
+  { href: "/ma", label: "M&A" },
   { href: "/map", label: "Risk Map" },
   { href: "/workloads", label: "Workloads" },
   { href: "/simulations", label: "Simulations" },
+  { href: "/analyze", label: "Analyze PDF" },
 ]
 
 export default function NavBar() {
@@ -20,10 +23,11 @@ export default function NavBar() {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0.75rem 1.5rem",
-        borderBottom: "1px solid #1e293b",
-        background: "rgba(15, 23, 42, 0.9)",
-        backdropFilter: "blur(12px)",
+        padding: "0 1.5rem",
+        height: 52,
+        borderBottom: "1px solid #27272a",
+        background: "rgba(10, 10, 11, 0.95)",
+        backdropFilter: "blur(16px)",
         position: "sticky",
         top: 0,
         zIndex: 1000,
@@ -33,32 +37,27 @@ export default function NavBar() {
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <Link
           href="/"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            textDecoration: "none",
-          }}
+          style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}
         >
           <span
             style={{
-              fontSize: 20,
-              fontWeight: 800,
-              background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              letterSpacing: "-0.02em",
+              fontSize: 17,
+              fontWeight: 700,
+              color: "#f4f4f5",
+              letterSpacing: "-0.03em",
             }}
           >
             NimbusGuard
           </span>
           <span
             style={{
-              fontSize: 10,
-              color: "#64748b",
-              border: "1px solid #334155",
-              borderRadius: 4,
-              padding: "1px 6px",
+              fontSize: 9,
+              color: "#52525b",
+              border: "1px solid #3f3f46",
+              borderRadius: 3,
+              padding: "1px 5px",
+              letterSpacing: "0.08em",
+              fontWeight: 600,
             }}
           >
             BETA
@@ -68,7 +67,7 @@ export default function NavBar() {
       </div>
 
       {/* Nav links */}
-      <div style={{ display: "flex", gap: 4 }}>
+      <div style={{ display: "flex", gap: 2 }}>
         {links.map(({ href, label }) => {
           const isActive = pathname === href
           return (

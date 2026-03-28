@@ -12,6 +12,10 @@ from backend.api.workloads import router as workloads_router
 from backend.api.migrations import router as migrations_router
 from backend.api.health import router as health_router
 from backend.api.cost import router as cost_router
+from backend.api.waste import router as waste_router
+from backend.api.analyze import router as analyze_router
+from backend.api.ma import router as ma_router
+from backend.api.anomaly import router as anomaly_router
 
 app = FastAPI(
     title="NimbusGuard API",
@@ -36,3 +40,7 @@ app.include_router(simulate_router)
 app.include_router(workloads_router)
 app.include_router(migrations_router)
 app.include_router(cost_router)
+app.include_router(waste_router)
+app.include_router(analyze_router)
+app.include_router(ma_router)
+app.include_router(anomaly_router)

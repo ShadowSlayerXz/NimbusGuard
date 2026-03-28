@@ -9,6 +9,10 @@ import type {
   MigrationLog,
   CostScanResult,
   WasteBreakdown,
+  WasteScanResult,
+  PdfAnalysisResult,
+  MAReport,
+  AnomalyScanResult,
 } from "./types"
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
@@ -142,5 +146,36 @@ export async function fetchLatestCostScan(): Promise<CostScanResult> {
 
 export async function fetchWasteBreakdown(): Promise<WasteBreakdown> {
   const res = await fetch(`${BASE}/api/cost/waste-breakdown`)
+  return unwrap(res)
+}
+
+/* ── Utilization & Waste Analysis ────────────────────────── */
+
+export async function runWasteScan(): Promise<WasteScanResult> {
+  const res = await fetch(`${BASE}/api/waste/scan`, { method: "POST" })
+  return unwrap(res)
+}
+
+export async function fetchLatestWasteScan(): Promise<WasteScanResult> {
+  const res = await fetch(`${BASE}/api/waste/latest`)
+  return unwrap(res)
+}
+
+/* ── PDF Financial Analysis ──────────────────────────── */
+
+export async function fetchMAReport(): Promise<MAReport> {
+  const res = await fetch(`${BASE}/api/ma/report`)
+  return unwrap(res)
+}
+
+export async function fetchAnomalyScan(): Promise<AnomalyScanResult> {
+  const res = await fetch(`${BASE}/api/anomalies/scan`)
+  return unwrap(res)
+}
+
+export async function analyzePdf(file: File): Promise<PdfAnalysisResult> {
+  const form = new FormData()
+  form.append("file", file)
+  const res = await fetch(`${BASE}/api/analyze/pdf`, { method: "POST", body: form })
   return unwrap(res)
 }
