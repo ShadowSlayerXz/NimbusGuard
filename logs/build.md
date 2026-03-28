@@ -404,6 +404,48 @@ None
 - Ingestion tasks may overwrite demo scores; always reseed before demo
 - CORS broadened to wildcard for flexibility across environments
 
+---
+
+## Cost Inefficiency Engine
+**Status**: Complete
+**Date**: 2026-03-28
+
+### Files Created
+- backend/core/cost_analyzer.py
+- backend/api/cost.py
+- backend/schemas/cost.py
+- backend/core/test_cost_analyzer.py
+
+### Test Results
+- [x] wastage_percentage > 15 -> 23.1% pass
+- [x] total_wastage_usd > 0 -> $2,887.81 pass
+- [x] workloads_risk_premium >= 1 -> 1 (ML Training Job in CRITICAL Sydney region) pass
+- [x] risk_blocked_savings_usd > 0 -> $2,381.91 (us-east-1 WARNING blocks cheapest option for all 5 workloads) pass
+- [x] W2 -> GCP region -> gcp/us-east1 (joint_score wins at 0.95x mult + NORMAL risk) pass
+- [x] no CRITICAL in rank-1 -> pass (CRITICAL hard-excluded from candidates)
+- [x] WARNING flagged as risk_adjusted -> no WARNING in top-3 (penalized below NORMAL by safety_score) pass
+- [x] cheapest_blocked populated for 2+ workloads -> all 5 workloads blocked by aws/us-east-1 WARNING pass
+- [x] by_provider AWS is largest -> aws=$2,062.81 vs azure=$825.00 pass
+- [x] biggest_opportunity saving > $500 -> ML Training Job $1,106.56 pass
+
+### Errors Encountered
+UnicodeEncodeError on Windows cp1252 console for box-drawing/checkmark characters.
+Fix: replaced all Unicode symbols (checkmarks, arrows, box chars) with ASCII equivalents in test output.
+Resolved.
+
+### Notes
+- RISK_PREMIUM is the highest-priority classification: if current region score > 55 AND cheaper+safer
+  alternatives exist, the workload is tagged RISK_PREMIUM regardless of other factors.
+  ML Training Job (aws/ap-southeast-2, CRITICAL score 88) triggers this.
+- WARNING candidates (aws/us-east-1, score 68) are included in ranked candidates but penalized:
+  safety_score = 1 - 68/100 = 0.32 vs NORMAL at 0.88, dropping joint_score below all NORMAL options.
+  They do NOT appear in top-3, but are captured as cheapest_blocked.
+- risk_blocked_savings_usd = $2,381.91: the additional monthly savings that could be unlocked if
+  aws/us-east-1 (WARNING) were safe to use. This is the risk intelligence layer made visible.
+- Joint score formula: 0.65 * saving_pct + 0.35 * safety_score (cost-primary, risk-constrained).
+- API routes registered at /api/cost/scan (POST), /api/cost/latest (GET), /api/cost/waste-breakdown (GET).
+- Latest scan cached in memory (_latest_scan module-level var) for fast /api/cost/latest retrieval.
+
 
 
 
