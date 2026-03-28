@@ -101,7 +101,7 @@ export default function AlertFeed({ regionFilter, onClearFilter }: AlertFeedProp
         return (
           <div
             key={s.id}
-            onClick={() => setSelectedRegion({ provider: "aws", region_id: s.region })}
+            onClick={() => setSelectedRegion({ provider: s.provider ?? "aws", region_id: s.region })}
             style={{
               display: "flex",
               alignItems: "center",

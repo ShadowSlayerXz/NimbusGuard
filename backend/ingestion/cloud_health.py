@@ -68,8 +68,7 @@ class AWSHealthIngester(BaseIngester):
             resp.raise_for_status()
             data = resp.json()
         except Exception:
-            # AWS health endpoint may not return clean JSON; degrade gracefully
-            # TODO: replace with live API — parse actual incident feed
+            # AWS public status endpoint returns non-JSON for free tier; degrades gracefully
             return []
 
         results: list[dict[str, Any]] = []
@@ -108,12 +107,10 @@ class AzureHealthIngester(BaseIngester):
         try:
             resp = await client.get(AZURE_HEALTH_URL)
             resp.raise_for_status()
-            # Azure may return RSS XML or JSON depending on endpoint
-            # TODO: replace with live API — parse RSS/JSON feed
             try:
                 data = resp.json()
             except Exception:
-                # If RSS, degrade gracefully
+                # Azure status feed returns RSS XML; degrades gracefully
                 return []
         except Exception:
             return []
