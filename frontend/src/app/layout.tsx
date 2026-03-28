@@ -9,7 +9,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   title: "NimbusGuard — Multi-Cloud Resilience Platform",
   description:
-    "Real-time risk monitoring, simulation, and migration orchestration across AWS, Azure, and GCP.",
+    "Risk-aware multi-cloud cost optimization across AWS, Azure, and GCP.",
 }
 
 export default function RootLayout({

@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(source .venv/Scripts/activate)",
+      "Bash(pip show:*)",
+      "Bash(pip install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker restart:*)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(docker compose:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(curl -s http://localhost:8000/api/workloads)",
+      "Bash(curl -s -X POST http://localhost:8000/api/cost/scan -H \"Content-Type: application/json\" -d '{}')",
+      "Bash(curl -s http://localhost:8000/api/signals?limit=10)",
+      "Bash(curl -s \"http://localhost:8000/api/signals?limit=100\")",
+      "Bash(curl -s \"http://localhost:8000/api/risk-scores/aws/ap-southeast-2\")",
+      "Bash(curl -s http://localhost:8000/api/waste/latest)",
+      "Bash(curl -s -X POST http://localhost:8000/api/cost/scan)",
+      "Bash(curl -s http://localhost:8000/api/analyze/pdf)",
+      "Bash(curl -s http://localhost:8000/openapi.json)",
+      "Bash(curl -s http://localhost:8000/api/ma/report)",
+      "Bash(curl -s http://localhost:8000/api/anomalies/scan)",
+      "Bash(find /x/Projects/Haackathons/NimbusGuard -not -path */node_modules/* -type f)",
+      "Bash(grep -n \"url\\\\|endpoint\\\\|fetch\\\\|request\\\\|httpx\\\\|BASE_URL\\\\|API_URL\" backend/ingestion/*.py)",
+      "WebSearch",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\(''''scripts'''',{}\\), indent=2\\)\\)\")",
+      "Bash(curl -s -X POST http://localhost:8000/api/analyze/pdf -F \"file=@demo/finvault_cloud_report_q4_2025.pdf\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''ERROR:'''', d.get\\(''''error''''\\)\\) if d.get\\(''''error''''\\) else print\\(''''OK - health:'''', d[''''data''''][''''analysis''''][''''financial_health'''']\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''ERROR:'''', d.get\\(''''error''''\\) or d.get\\(''''detail''''\\)\\) if \\(d.get\\(''''error''''\\) or d.get\\(''''detail''''\\)\\) else print\\(''''OK - health:'''', d[''''data''''][''''analysis''''][''''financial_health'''']\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''ERROR:'''', d.get\\(''''error''''\\) or d.get\\(''''detail''''\\)\\) if \\(d.get\\(''''error''''\\) or d.get\\(''''detail''''\\)\\) else print\\(''''SUCCESS - health:'''', d[''''data''''][''''analysis''''][''''financial_health'''']\\)\")",
+      "Bash(find X:ProjectsHaackathonsNimbusGuard -name .env* -o -name *.env.example)",
+      "Bash(cd:*)"
+    ]
+  }
+}

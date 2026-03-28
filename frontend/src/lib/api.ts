@@ -2,10 +2,8 @@
 
 import type {
   ApiResponse,
-  RiskEvent,
   RegionRiskScore,
   Workload,
-  SimulationResult,
   MigrationLog,
   CostScanResult,
   WasteBreakdown,
@@ -21,19 +19,6 @@ async function unwrap<T>(res: Response): Promise<T> {
   const body: ApiResponse<T> = await res.json()
   if (body.error) throw new Error(body.error)
   return body.data
-}
-
-/* ── Signals ─────────────────────────────────────────── */
-
-export async function fetchSignals(
-  params?: { category?: string; region?: string; limit?: number },
-): Promise<RiskEvent[]> {
-  const q = new URLSearchParams()
-  if (params?.category) q.set("category", params.category)
-  if (params?.region) q.set("region", params.region)
-  if (params?.limit) q.set("limit", String(params.limit))
-  const res = await fetch(`${BASE}/api/signals?${q}`)
-  return unwrap<RiskEvent[]>(res)
 }
 
 /* ── Risk Scores ─────────────────────────────────────── */
@@ -61,24 +46,6 @@ export async function refreshRiskScores(): Promise<{
   duration_ms: number
 }> {
   const res = await fetch(`${BASE}/api/risk-scores/refresh`, { method: "POST" })
-  return unwrap(res)
-}
-
-/* ── Simulations ─────────────────────────────────────── */
-
-export async function runSimulation(eventId: string): Promise<SimulationResult> {
-  const res = await fetch(`${BASE}/api/simulate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ event_id: eventId }),
-  })
-  return unwrap(res)
-}
-
-export async function fetchSimulations(
-  limit = 20,
-): Promise<SimulationResult[]> {
-  const res = await fetch(`${BASE}/api/simulate?limit=${limit}`)
   return unwrap(res)
 }
 

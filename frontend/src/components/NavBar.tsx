@@ -8,9 +8,7 @@ const links = [
   { href: "/", label: "Cost Intel" },
   { href: "/anomalies", label: "Anomalies" },
   { href: "/ma", label: "M&A" },
-  { href: "/map", label: "Risk Map" },
   { href: "/workloads", label: "Workloads" },
-  { href: "/simulations", label: "Simulations" },
   { href: "/analyze", label: "Analyze PDF" },
 ]
 
