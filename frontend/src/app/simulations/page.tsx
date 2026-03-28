@@ -3,27 +3,31 @@
 import useSWR from "swr"
 import { fetchSimulations } from "@/lib/api"
 import SimulationPanel from "@/components/SimulationPanel"
+import { formatRelativeTime, formatCostDelta } from "@/lib/utils"
 import type { SimulationResult } from "@/lib/types"
 
-function timeStr(iso: string) {
-  return new Date(iso).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
-
-function fmt(usd: number) {
-  const abs = Math.abs(usd)
-  const str = "$" + abs.toLocaleString("en-US", { maximumFractionDigits: 0 })
-  return usd < 0 ? `-${str}` : `+${str}`
+function SkeletonTable() {
+  return (
+    <div style={{ padding: "0.75rem 1rem" }}>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} style={{ display: "flex", gap: 16, padding: "0.65rem 0", borderBottom: "1px solid rgba(51,65,85,0.4)" }}>
+          <div className="skeleton" style={{ width: 100, height: 16 }} />
+          <div className="skeleton" style={{ width: 80, height: 16 }} />
+          <div className="skeleton" style={{ width: 80, height: 16 }} />
+          <div className="skeleton" style={{ width: 100, height: 16 }} />
+          <div className="skeleton" style={{ width: 80, height: 16 }} />
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export default function SimulatePage() {
-  const { data: sims } = useSWR("sim-history", () => fetchSimulations(10), {
-    refreshInterval: 15_000,
-  })
+  const { data: sims, error, isLoading } = useSWR(
+    "sim-history",
+    () => fetchSimulations(10),
+    { refreshInterval: 15_000, dedupingInterval: 15_000 },
+  )
 
   return (
     <div style={{ padding: "1.5rem", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
@@ -67,11 +71,11 @@ export default function SimulatePage() {
         >
           Simulation History
         </div>
-        {!sims ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
-            <div className="spinner" />
-          </div>
-        ) : sims.length === 0 ? (
+        {isLoading ? (
+          <SkeletonTable />
+        ) : error ? (
+          <div className="error-box" style={{ margin: "1rem" }}>Failed to load simulations. Retrying...</div>
+        ) : !sims || sims.length === 0 ? (
           <div style={{ padding: "2rem", textAlign: "center", color: "#64748b" }}>
             No simulations yet
           </div>
@@ -92,7 +96,7 @@ export default function SimulatePage() {
                 const isSaving = s.estimated_cost_delta_usd < 0
                 return (
                   <tr key={s.id}>
-                    <td style={{ color: "#64748b" }}>{timeStr(s.created_at)}</td>
+                    <td style={{ color: "#94a3b8" }}>{formatRelativeTime(s.created_at)}</td>
                     <td style={{ fontFamily: "var(--font-mono, monospace)", fontSize: "0.75rem" }}>
                       {s.trigger_event_id.slice(0, 8)}…
                     </td>
@@ -109,7 +113,7 @@ export default function SimulatePage() {
                         color: isSaving ? "#22c55e" : "#ef4444",
                       }}
                     >
-                      {fmt(s.estimated_cost_delta_usd)}/mo
+                      {formatCostDelta(s.estimated_cost_delta_usd)}/mo
                     </td>
                   </tr>
                 )

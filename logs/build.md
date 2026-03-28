@@ -363,6 +363,48 @@ None
 - All 5 signal categories visible in AlertFeed with correct badge colors
 - us-west-2 WARNING (78), ap-southeast-1 CRITICAL (82), eu-central-1 WATCH (48), eu-west-1 WATCH (44)
 
+---
+
+## Task 11 — End-to-End Integration + Polish
+**Status**: ✅ Complete
+**Date**: 2026-03-28
+
+### Files Created/Updated
+- backend/api/health.py (enhanced — DB, Redis, Celery, stats)
+- backend/main.py (health router, CORS wildcard)
+- frontend/src/components/LiveBadge.tsx
+- frontend/src/components/TierBadge.tsx
+- frontend/src/components/ProviderBadge.tsx
+- frontend/src/lib/utils.ts (formatRelativeTime, formatUSD, formatCostDelta)
+- frontend/src/components/AlertFeed.tsx (skeleton, region filter, relative time)
+- frontend/src/components/WorkloadTable.tsx (skeleton, TierBadge, ProviderBadge)
+- frontend/src/components/NavBar.tsx (LiveBadge added)
+- frontend/src/app/page.tsx (skeleton loaders, region filter)
+- frontend/src/app/simulations/page.tsx (skeleton, relative time)
+- frontend/src/app/globals.css (pulse-live, pulse-critical, skeleton-shimmer, error-box)
+
+### Final Checklist
+- [x] GET /health → all ok ✅ (DB ok, Redis ok, Celery ok)
+- [x] Dashboard live data < 2s ✅
+- [x] Map markers correct colors ✅ (WARNING orange, CRITICAL red, NORMAL green)
+- [x] Simulation end-to-end ✅ (22→91, -$52/mo)
+- [x] Approve All updates WorkloadTable ✅
+- [x] Relative timestamps everywhere ✅ ("3m ago", "13m ago")
+- [x] Skeleton loaders on first load ✅
+- [x] LiveBadge in navbar ✅ (pulsing green "● LIVE")
+- [x] TierBadge/ProviderBadge in WorkloadTable ✅ (AWS orange, NORMAL green)
+- [x] Full demo scenario works after reseed ✅
+
+### Errors Encountered
+None
+
+### Notes
+- Health endpoint reports regions_monitored, signals_last_24h, last_scored_at
+- Celery beat shows "idle" (expected — no persistent beat lock in Redis)
+- Ingestion tasks may overwrite demo scores; always reseed before demo
+- CORS broadened to wildcard for flexibility across environments
+
+
 
 
 

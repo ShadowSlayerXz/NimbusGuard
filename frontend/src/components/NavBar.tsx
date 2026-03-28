@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import LiveBadge from "./LiveBadge"
 
 const links = [
   { href: "/", label: "Dashboard" },
@@ -29,39 +30,42 @@ export default function NavBar() {
       }}
     >
       {/* Logo */}
-      <Link
-        href="/"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          textDecoration: "none",
-        }}
-      >
-        <span
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Link
+          href="/"
           style={{
-            fontSize: 20,
-            fontWeight: 800,
-            background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            letterSpacing: "-0.02em",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            textDecoration: "none",
           }}
         >
-          NimbusGuard
-        </span>
-        <span
-          style={{
-            fontSize: 10,
-            color: "#64748b",
-            border: "1px solid #334155",
-            borderRadius: 4,
-            padding: "1px 6px",
-          }}
-        >
-          BETA
-        </span>
-      </Link>
+          <span
+            style={{
+              fontSize: 20,
+              fontWeight: 800,
+              background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            NimbusGuard
+          </span>
+          <span
+            style={{
+              fontSize: 10,
+              color: "#64748b",
+              border: "1px solid #334155",
+              borderRadius: 4,
+              padding: "1px 6px",
+            }}
+          >
+            BETA
+          </span>
+        </Link>
+        <LiveBadge />
+      </div>
 
       {/* Nav links */}
       <div style={{ display: "flex", gap: 4 }}>

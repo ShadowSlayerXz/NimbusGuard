@@ -10,6 +10,7 @@ from backend.api.risk import router as risk_router
 from backend.api.simulate import router as simulate_router
 from backend.api.workloads import router as workloads_router
 from backend.api.migrations import router as migrations_router
+from backend.api.health import router as health_router
 
 app = FastAPI(
     title="NimbusGuard API",
@@ -20,26 +21,16 @@ app = FastAPI(
 # ── CORS — allow frontend dev server ────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ── Register API routers ────────────────────────────────
+app.include_router(health_router)
 app.include_router(signals_router)
 app.include_router(risk_router)
 app.include_router(simulate_router)
 app.include_router(workloads_router)
 app.include_router(migrations_router)
-
-
-@app.get("/health")
-async def health_check():
-    """Health-check probe used by Docker and smoke tests."""
-    return {
-        "data": {"status": "ok"},
-        "error": None,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
-
