@@ -20,21 +20,11 @@ def _run_async(coro):
 
 
 async def _ingest_standard():
-    """Run standard ingesters (not cloud health) and insert to DB."""
+    """Run Cloudflare Radar ingester and insert to DB."""
     from backend.db.session import new_session
-    from backend.ingestion.eonet import EONETIngester
-    from backend.ingestion.noaa import NOAAIngester
-    from backend.ingestion.usgs import USGSIngester
-    from backend.ingestion.gdelt import GDELTIngester
     from backend.ingestion.cloudflare import CloudflareIngester
 
-    ingesters = [
-        EONETIngester(),
-        NOAAIngester(),
-        USGSIngester(),
-        GDELTIngester(),
-        CloudflareIngester(),
-    ]
+    ingesters = [CloudflareIngester()]
 
     total = 0
     async with new_session() as db:
@@ -82,7 +72,7 @@ async def _ingest_cloud():
     name="backend.tasks.ingestion_tasks.ingest_all",
 )
 def ingest_all(self):
-    """Ingest signals from all standard sources (eonet, noaa, usgs, gdelt, cloudflare)."""
+    """Ingest signals from Cloudflare Radar (BGP/cyber threats)."""
     try:
         total = _run_async(_ingest_standard())
         logger.info("ingest_all: inserted %d events total", total)

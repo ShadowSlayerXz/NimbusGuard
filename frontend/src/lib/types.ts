@@ -3,7 +3,7 @@
 export interface RiskEvent {
   id: string
   source: string
-  category: "natural_disaster" | "geopolitical" | "cyber" | "infrastructure"
+  category: "infrastructure" | "cyber"
   region: string
   severity: number
   raw_payload: Record<string, unknown>

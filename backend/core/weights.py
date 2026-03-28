@@ -4,10 +4,8 @@ from __future__ import annotations
 
 # Per-category weights — must sum to 1.0
 WEIGHTS: dict[str, float] = {
-    "infrastructure":   0.45,
-    "natural_disaster": 0.30,
-    "geopolitical":     0.15,
-    "cyber":            0.10,
+    "infrastructure": 0.80,
+    "cyber":          0.20,
 }
 
 # Score-range → tier label

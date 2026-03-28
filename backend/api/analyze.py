@@ -110,18 +110,28 @@ async def _call_gemini(extracted_text: str) -> dict:
 
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(
-        "gemini-1.5-flash",
+        "gemini-2.0-flash",
         system_instruction=_SYSTEM_PROMPT,
     )
 
-    truncated = extracted_text[:40000]  # stay well within context
+    truncated = extracted_text[:8000]  # free tier: ~1M tokens/day but 32k tokens/min limit
     prompt = (
         "Analyse the following financial document and return your findings "
         "as JSON exactly matching the schema in your instructions.\n\n"
         f"DOCUMENT TEXT:\n{truncated}"
     )
 
-    response = await asyncio.to_thread(model.generate_content, prompt)
+    try:
+        response = await asyncio.to_thread(model.generate_content, prompt)
+    except Exception as exc:
+        err_str = str(exc)
+        if "429" in err_str or "quota" in err_str.lower() or "rate" in err_str.lower():
+            raise HTTPException(
+                status_code=429,
+                detail="Gemini API rate limit reached. Wait a minute and try again.",
+            )
+        raise HTTPException(status_code=502, detail=f"Gemini API error: {err_str[:200]}")
+
     raw = response.text.strip()
 
     # Strip accidental markdown fences

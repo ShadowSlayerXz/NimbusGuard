@@ -28,27 +28,16 @@ async def _run_tests() -> bool:
         # ── Insert mock RiskEvents ──────────────────────────────────
         now = datetime.now(timezone.utc)
         mock_events = [
-            # 2x natural_disaster in us-east-1
-            RiskEvent(
-                id=uuid.uuid4(), source="usgs", category="natural_disaster",
-                region="us-east-1", severity=0.7, raw_payload={},
-                created_at=now,
-            ),
-            RiskEvent(
-                id=uuid.uuid4(), source="noaa", category="natural_disaster",
-                region="us-east-1", severity=0.5, raw_payload={},
-                created_at=now,
-            ),
             # 1x infrastructure in us-east-1
             RiskEvent(
                 id=uuid.uuid4(), source="aws_health", category="infrastructure",
                 region="us-east-1", severity=0.9, raw_payload={},
                 created_at=now,
             ),
-            # 1x geopolitical in us-east-1
+            # 1x cyber in us-east-1
             RiskEvent(
-                id=uuid.uuid4(), source="gdelt", category="geopolitical",
-                region="us-east-1", severity=0.4, raw_payload={},
+                id=uuid.uuid4(), source="cloudflare", category="cyber",
+                region="us-east-1", severity=0.5, raw_payload={},
                 created_at=now,
             ),
             # 1x cyber in eu-west-1
@@ -65,13 +54,11 @@ async def _run_tests() -> bool:
         score = await engine.compute_region_score("aws", "us-east-1", db)
 
         # Expected:
-        #   infrastructure:   0.45 * 0.9 = 0.405
-        #   natural_disaster: 0.30 * 0.7 = 0.210  (max of 0.7 and 0.5)
-        #   geopolitical:     0.15 * 0.4 = 0.060
-        #   cyber:            0.10 * 0.0 = 0.000
-        #   raw = 0.675 → composite = 67
-        expected_score = 67
-        expected_tier = "WARNING"
+        #   infrastructure:   0.80 * 0.9 = 0.720
+        #   cyber:            0.20 * 0.5 = 0.100
+        #   raw = 0.820 → composite = 82
+        expected_score = 82
+        expected_tier = "CRITICAL"
 
         print(f"[us-east-1] composite_score = {score.composite_score}  "
               f"(expected {expected_score})")
@@ -89,9 +76,9 @@ async def _run_tests() -> bool:
             print("  ✓ PASS")
 
         breakdown = score.signal_breakdown or {}
-        all_cats = {"infrastructure", "natural_disaster", "geopolitical", "cyber"}
+        all_cats = {"infrastructure", "cyber"}
         has_all = all_cats <= set(breakdown.keys())
-        print(f"[us-east-1] signal_breakdown has all 4 categories: {has_all}")
+        print(f"[us-east-1] signal_breakdown has all 2 categories: {has_all}")
         if not has_all:
             print(f"  ✗ FAIL — keys: {list(breakdown.keys())}")
             ok = False

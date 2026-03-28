@@ -90,15 +90,11 @@ without blocking the event loop.
 PDF text extraction library. Used in the `/api/analyze/pdf` endpoint to
 pull text from uploaded financial documents before sending to Gemini.
 
-### textblob
-Lightweight NLP library. Used by the GDELT ingester to estimate severity
-from article headlines via sentiment polarity scoring.
-
 ---
 
 ## AI
 
-### Google Gemini 1.5 Flash
+### Google Gemini 2.0 Flash
 Used for the Financial Intelligence module. Receives extracted PDF text
 and returns a structured JSON analysis: cloud spend identification,
 12-month cost projections, risk factors, and optimization recommendations.
@@ -215,20 +211,15 @@ Integrating these is the next engineering milestone post-hackathon.
 
 ## External Data Sources (Risk Signals)
 
-These are the APIs NimbusGuard actually calls in production. All five
-free-tier sources run live; the three provider health feeds degrade
-gracefully when unavailable.
+These are the APIs NimbusGuard calls in production. Provider health feeds
+degrade gracefully when unavailable.
 
 | Source | API endpoint | Key required | Status |
 |---|---|---|---|
-| USGS Earthquakes | `earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson` | No | Live |
-| NASA EONET | `eonet.gsfc.nasa.gov/api/v3/events` | No | Live |
-| NOAA Weather | `api.weather.gov/alerts/active` | No | Live |
-| GDELT | `api.gdeltproject.org/api/v2/doc/doc` | No | Live |
-| GCP Status | `status.cloud.google.com/incidents.json` | No | Live |
 | AWS Health | `health.aws.amazon.com/health/status` | No | Degrades gracefully |
 | Azure Health | `azure.status.microsoft/en-us/status/feed/` | No | Degrades gracefully |
-| Cloudflare Radar | `api.cloudflare.com/client/v4/radar/bgp/hijacks/events` | Yes (free) | Optional |
+| GCP Status | `status.cloud.google.com/incidents.json` | No | Live |
+| Cloudflare Radar | `api.cloudflare.com/client/v4/radar/bgp/hijacks/events` | Yes (free) | Live |
 
 ---
 

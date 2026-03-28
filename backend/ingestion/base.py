@@ -105,8 +105,8 @@ COUNTRY_TO_AWS_REGION: dict[str, str] = {
 class BaseIngester(abc.ABC):
     """Abstract base class that every ingestion module inherits."""
 
-    source: str = ""       # e.g. "eonet", "noaa" — set by subclass
-    category: str = ""     # e.g. "natural_disaster"  — set by subclass
+    source: str = ""       # e.g. "aws_health", "cloudflare" — set by subclass
+    category: str = ""     # e.g. "infrastructure", "cyber" — set by subclass
 
     # Shared async HTTP client (created once, reused)
     _client: httpx.AsyncClient | None = None

@@ -2,7 +2,7 @@
 
 Run:  python -m backend.core.test_simulator
 
-Uses the demo scenario: M6.2 earthquake near AWS us-west-2 (Oregon).
+Uses the demo scenario: AWS infrastructure outage in us-west-2 (Oregon).
 """
 
 from __future__ import annotations
@@ -27,14 +27,14 @@ async def _run_tests() -> bool:
     async with async_session_factory() as db:
         # ── Setup: seed demo data ───────────────────────────────────
 
-        # 1. RiskEvent — M6.2 earthquake near us-west-2
+        # 1. RiskEvent — AWS infrastructure outage in us-west-2
         event = RiskEvent(
             id=uuid.uuid4(),
-            source="usgs",
-            category="natural_disaster",
+            source="aws_health",
+            category="infrastructure",
             region="us-west-2",
             severity=0.85,
-            raw_payload={"magnitude": 6.2, "location": "Oregon"},
+            raw_payload={"service": "EC2", "status": "degraded", "affected_az": "us-west-2a"},
             created_at=now,
         )
         db.add(event)

@@ -7,8 +7,6 @@ import { formatRelativeTime } from "@/lib/utils"
 import type { RiskEvent } from "@/lib/types"
 
 const CAT_COLORS: Record<string, { bg: string; fg: string }> = {
-  natural_disaster: { bg: "rgba(249,115,22,0.15)", fg: "#f97316" },
-  geopolitical:     { bg: "rgba(239,68,68,0.15)",  fg: "#ef4444" },
   infrastructure:   { bg: "rgba(59,130,246,0.15)",  fg: "#3b82f6" },
   cyber:            { bg: "rgba(139,92,246,0.15)",  fg: "#8b5cf6" },
 }

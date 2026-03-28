@@ -39,8 +39,7 @@ python -m backend.core.test_cost_analyzer
 python -m backend.core.test_simulator
 
 # Dry-run a single ingester (prints what it would ingest)
-python -m backend.ingestion.eonet
-python -m backend.ingestion.usgs
+python -m backend.ingestion.cloudflare
 ```
 
 ## Frontend development
@@ -94,7 +93,7 @@ throws on `body.error`.
 `RiskEvent` rows are ingested every 5 minutes by Celery. The scoring engine
 (`backend/core/scoring.py`) reads the last 24 hours of events, takes the
 **max severity per category per region**, applies the weights
-`infrastructure×0.45 + natural_disaster×0.30 + geopolitical×0.15 + cyber×0.10`,
+`infrastructure×0.80 + cyber×0.20`,
 and **inserts** (never updates) a new `RegionRiskScore` row.
 
 `region_risk_scores` is a TimescaleDB hypertable. Always query it with

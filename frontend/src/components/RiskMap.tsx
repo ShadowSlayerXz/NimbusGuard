@@ -107,7 +107,7 @@ export default function RiskMap({ scores, providerFilter }: RiskMapProps) {
 
                   <table style={{ width: "100%", fontSize: 11, borderCollapse: "collapse" }}>
                     <tbody>
-                      {["infrastructure", "natural_disaster", "geopolitical", "cyber"].map(
+                      {["infrastructure", "cyber"].map(
                         (cat) => {
                           const info = breakdown[cat]
                           return (

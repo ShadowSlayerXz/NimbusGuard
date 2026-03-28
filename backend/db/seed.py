@@ -52,40 +52,29 @@ async def seed() -> None:
         #    exactly the tiers we want for the demo.
         #
         #    Scoring formula: score = int(sum(weight[cat]*max_sev[cat])*100)
-        #    Weights: infrastructure=0.45, natural_disaster=0.30,
-        #             geopolitical=0.15, cyber=0.10
+        #    Weights: infrastructure=0.80, cyber=0.20
         #
-        #    ap-southeast-2 target ~87 CRITICAL:
-        #      0.45*0.92 + 0.30*0.88 + 0.15*0.74 + 0.10*0.82 = 0.871
+        #    ap-southeast-2 target ~88 CRITICAL:
+        #      0.80*0.92 + 0.20*0.82 = 0.900
         #    ap-southeast-1 target ~85 CRITICAL:
-        #      0.45*0.95 + 0.30*0.80 + 0.15*0.70 + 0.10*0.85 = 0.857
-        #    us-east-1 target ~66 WARNING:
-        #      0.45*0.88 + 0.30*0.65 + 0.10*0.68 = 0.659
+        #      0.80*0.95 + 0.20*0.85 = 0.930
+        #    us-east-1 target ~70 WARNING:
+        #      0.80*0.80 + 0.20*0.68 = 0.776
+        #    eu-central-1 target ~49 WATCH:
+        #      0.80*0.62 = 0.496
+        #    sa-east-1 target ~42 WATCH:
+        #      0.80*0.52 = 0.416
         # ══════════════════════════════════════════════════════════════
         events = [
 
-            # ── ap-southeast-2 (Sydney) → CRITICAL ~87 ──────────────
-            RiskEvent(
-                id=uuid.uuid4(), source="usgs", category="natural_disaster",
-                region="ap-southeast-2", severity=0.88,
-                raw_payload={"magnitude": 6.8, "location": "Sydney Basin",
-                             "depth_km": 8, "alert_level": "orange"},
-                created_at=now,
-            ),
+            # ── ap-southeast-2 (Sydney) → CRITICAL ~90 ──────────────
             RiskEvent(
                 id=uuid.uuid4(), source="aws_health", category="infrastructure",
                 region="ap-southeast-2", severity=0.92,
                 raw_payload={"service": "EC2", "status": "degraded",
                              "affected_az": "ap-southeast-2a",
                              "incident_id": "AWS-AP2-2026-001",
-                             "note": "Seismic interference with data centre power"},
-                created_at=now,
-            ),
-            RiskEvent(
-                id=uuid.uuid4(), source="gdelt", category="geopolitical",
-                region="ap-southeast-2", severity=0.74,
-                raw_payload={"headline": "Australia emergency infrastructure protocols activated",
-                             "sentiment_score": -0.81, "country": "AU"},
+                             "note": "Power supply failure in primary data centre"},
                 created_at=now,
             ),
             RiskEvent(
@@ -96,27 +85,13 @@ async def seed() -> None:
                 created_at=now,
             ),
 
-            # ── ap-southeast-1 (Singapore) → CRITICAL ~85 ───────────
+            # ── ap-southeast-1 (Singapore) → CRITICAL ~93 ───────────
             RiskEvent(
                 id=uuid.uuid4(), source="aws_health", category="infrastructure",
                 region="ap-southeast-1", severity=0.95,
                 raw_payload={"service": "EC2", "status": "degraded",
                              "affected_az": "ap-southeast-1a",
                              "incident_id": "AWS-AP1-2026-001"},
-                created_at=now,
-            ),
-            RiskEvent(
-                id=uuid.uuid4(), source="usgs", category="natural_disaster",
-                region="ap-southeast-1", severity=0.80,
-                raw_payload={"magnitude": 5.9, "location": "Sumatra fault zone",
-                             "depth_km": 15, "alert_level": "yellow"},
-                created_at=now,
-            ),
-            RiskEvent(
-                id=uuid.uuid4(), source="gdelt", category="geopolitical",
-                region="ap-southeast-1", severity=0.70,
-                raw_payload={"headline": "Regional maritime tensions affecting Singapore",
-                             "sentiment_score": -0.74, "country": "SG"},
                 created_at=now,
             ),
             RiskEvent(
@@ -127,9 +102,18 @@ async def seed() -> None:
                 created_at=now,
             ),
 
-            # ── us-east-1 (N. Virginia) → WARNING ~66 ───────────────
-            # Cheapest AWS region — but BGP attack makes it risky.
-            # This is what drives the "risk-blocked savings" number.
+            # ── us-east-1 (N. Virginia) → WARNING ~78 ───────────────
+            # Cheapest AWS region — but active BGP hijack makes it risky.
+            # This drives the "risk-blocked savings" number.
+            RiskEvent(
+                id=uuid.uuid4(), source="aws_health", category="infrastructure",
+                region="us-east-1", severity=0.80,
+                raw_payload={"service": "Route53", "status": "impaired",
+                             "affected_az": "us-east-1b",
+                             "incident_id": "AWS-USE1-2026-001",
+                             "note": "DNS resolution delays linked to BGP incident"},
+                created_at=now,
+            ),
             RiskEvent(
                 id=uuid.uuid4(), source="cloudflare", category="cyber",
                 region="us-east-1", severity=0.68,
@@ -138,32 +122,8 @@ async def seed() -> None:
                              "traffic_redirected_pct": 12},
                 created_at=now,
             ),
-            RiskEvent(
-                id=uuid.uuid4(), source="aws_health", category="infrastructure",
-                region="us-east-1", severity=0.88,
-                raw_payload={"service": "Route53", "status": "impaired",
-                             "affected_az": "us-east-1b",
-                             "incident_id": "AWS-USE1-2026-001",
-                             "note": "DNS resolution delays linked to BGP incident"},
-                created_at=now,
-            ),
-            RiskEvent(
-                id=uuid.uuid4(), source="noaa", category="natural_disaster",
-                region="us-east-1", severity=0.65,
-                raw_payload={"event": "Hurricane Watch", "area": "Virginia coast",
-                             "wind_speed_mph": 78, "status": "watch"},
-                created_at=now,
-            ),
 
-            # ── eu-central-1 (Frankfurt) → WATCH ~48 ────────────────
-            RiskEvent(
-                id=uuid.uuid4(), source="gdelt", category="geopolitical",
-                region="eu-central-1", severity=0.55,
-                raw_payload={"headline": "Infrastructure tensions in Central Europe",
-                             "sentiment_score": -0.71, "country": "DE",
-                             "article_count": 47},
-                created_at=now,
-            ),
+            # ── eu-central-1 (Frankfurt) → WATCH ~50 ────────────────
             RiskEvent(
                 id=uuid.uuid4(), source="aws_health", category="infrastructure",
                 region="eu-central-1", severity=0.62,
@@ -172,30 +132,14 @@ async def seed() -> None:
                 created_at=now,
             ),
 
-            # ── sa-east-1 (Sao Paulo) → WATCH ~44 ───────────────────
+            # ── sa-east-1 (Sao Paulo) → WATCH ~42 ───────────────────
             RiskEvent(
-                id=uuid.uuid4(), source="noaa", category="natural_disaster",
-                region="sa-east-1", severity=0.66,
-                raw_payload={"event": "Tropical Storm Beatriz",
-                             "area": "Sao Paulo coastal region",
-                             "wind_speed_mph": 88, "status": "active"},
-                created_at=now,
-            ),
-            RiskEvent(
-                id=uuid.uuid4(), source="gdelt", category="geopolitical",
+                id=uuid.uuid4(), source="aws_health", category="infrastructure",
                 region="sa-east-1", severity=0.52,
-                raw_payload={"headline": "Brazil power grid instability warnings",
-                             "sentiment_score": -0.59, "country": "BR"},
+                raw_payload={"service": "RDS", "status": "degraded",
+                             "incident_id": "AWS-SAE1-2026-001",
+                             "note": "Power grid instability affecting availability zone"},
                 created_at=now,
-            ),
-
-            # ── ap-northeast-1 (Tokyo) → low NORMAL ~13 ─────────────
-            RiskEvent(
-                id=uuid.uuid4(), source="usgs", category="natural_disaster",
-                region="ap-northeast-1", severity=0.42,
-                raw_payload={"magnitude": 4.6, "location": "Tokyo metropolitan area",
-                             "depth_km": 40, "alert_level": "green"},
-                created_at=now - timedelta(hours=4),
             ),
         ]
         db.add_all(events)

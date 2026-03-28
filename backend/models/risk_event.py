@@ -16,13 +16,12 @@ class RiskEvent(Base):
     source = Column(
         String(50),
         nullable=False,
-        comment="eonet | noaa | usgs | gdelt | newsapi | "
-                "aws_health | azure_health | gcp_health | cloudflare",
+        comment="aws_health | azure_health | gcp_health | cloudflare",
     )
     category = Column(
         String(50),
         nullable=False,
-        comment="natural_disaster | geopolitical | cyber | infrastructure",
+        comment="infrastructure | cyber",
     )
     region = Column(
         String(50),

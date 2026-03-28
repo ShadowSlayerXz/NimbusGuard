@@ -5,11 +5,10 @@
 ## Elevator Pitch (30 seconds)
 
 > "Every enterprise running workloads on multiple clouds is simultaneously
-> overpaying and underprotected. NimbusGuard watches 8 live data sources —
-> earthquakes, outages, cyberattacks, geopolitical events — scores every cloud
-> region in real time, and tells you exactly which workloads to move, where,
-> and what you save. It's the only platform that solves cost and resilience
-> together, in one recommendation."
+> overpaying and underprotected. NimbusGuard watches live data sources —
+> outages, cyberattacks, BGP hijacks — scores every cloud region in real time,
+> and tells you exactly which workloads to move, where, and what you save.
+> It's the only platform that solves cost and resilience together, in one recommendation."
 
 ---
 
@@ -32,16 +31,14 @@ same time — until NimbusGuard.
 ## Our Solution: The 3-Layer Advantage
 
 ### Layer 1 — Real-World Signal Intelligence
-We ingest 8 live external data sources that cloud providers themselves don't
+We ingest live external data sources that cloud providers themselves don't
 monitor together:
 
-- **AWS/Azure/GCP health APIs** — direct infrastructure signals
-- **NASA EONET + NOAA + USGS** — natural disasters before they hit data centers
-- **GDELT** — geopolitical instability that precedes cloud suspensions
-- **Cloudflare Radar** — BGP hijacks and cyber threat intelligence
+- **AWS/Azure/GCP health APIs** — direct infrastructure signals from all three providers
+- **Cloudflare Radar** — BGP hijacks, DDoS events, and cyber threat intelligence
 
-No other cloud cost tool correlates a Chilean earthquake with your AWS Santiago
-workloads before the outage page updates.
+No other cloud cost tool correlates an active BGP hijack with your workload
+migrations before the outage page updates.
 
 ### Layer 2 — Unified Risk + Cost Score
 Every recommendation is computed against both dimensions simultaneously:
@@ -51,8 +48,8 @@ Is this region becoming risky?      YES → flag for migration
 Is there a cheaper alternative?     YES → here's the target + savings
 ```
 
-Our weighted composite score (Infrastructure 45% / Disasters 30% / Geopolitical
-15% / Cyber 10%) is updated every 5 minutes for all 48 monitored regions.
+Our weighted composite score (Infrastructure 80% / Cyber 20%) is updated every
+5 minutes for all 48 monitored regions.
 
 ### Layer 3 — Actionable Intelligence, Not Just Dashboards
 We don't just show pretty charts. Every insight comes with a specific, executable
@@ -70,13 +67,13 @@ recommendation:
 |---|---|
 | Workloads monitored | 14 across AWS + Azure + GCP |
 | Regions tracked | 48 (16 per provider) |
-| Signal sources | 8 live APIs |
+| Signal sources | 4 live APIs (AWS/Azure/GCP Health + Cloudflare Radar) |
 | Risk score refresh | Every 5 minutes |
 | **Cost waste detected** | **$23,940/month (33.5% of spend)** |
 | Anomalies flagged | 3 active (CRITICAL + HIGH + MEDIUM) |
 | Anomaly excess cost | $918/day · $27,556/month projected |
 | M&A cloud liability | $298,480 net Year 1 |
-| Simulation savings | $366/month (earthquake scenario) |
+| Simulation savings | $366/month (infrastructure outage scenario) |
 | PDF analysis | 12-month projections from any financial document |
 
 ---
