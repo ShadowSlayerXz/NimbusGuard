@@ -16,9 +16,10 @@ import type {
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 async function unwrap<T>(res: Response): Promise<T> {
-  const body: ApiResponse<T> = await res.json()
+  const body = await res.json()
+  if (!res.ok) throw new Error(body.error ?? body.detail ?? `Request failed (${res.status})`)
   if (body.error) throw new Error(body.error)
-  return body.data
+  return (body as ApiResponse<T>).data
 }
 
 /* ── Risk Scores ─────────────────────────────────────── */

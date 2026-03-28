@@ -308,9 +308,6 @@ export default function AnalyzePage() {
         }}>
           <div className="spinner" style={{ margin: "0 auto 1rem" }} />
           <div style={{ fontSize: "0.88rem", color: "#a1a1aa", fontWeight: 500 }}>{loadingMsg}</div>
-          <div style={{ fontSize: "0.75rem", color: "#52525b", marginTop: 4 }}>
-            Gemini AI is reading your document
-          </div>
         </div>
       )}
 
