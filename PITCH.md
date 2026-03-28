@@ -4,11 +4,11 @@
 
 ## Elevator Pitch (30 seconds)
 
-> "Every enterprise running workloads on multiple clouds is simultaneously
-> overpaying and underprotected. NimbusGuard watches live data sources —
-> outages, cyberattacks, BGP hijacks — scores every cloud region in real time,
-> and tells you exactly which workloads to move, where, and what you save.
-> It's the only platform that solves cost and resilience together, in one recommendation."
+> "Every enterprise running workloads across multiple clouds is simultaneously
+> overpaying and underprotected. NimbusGuard pulls live infrastructure and
+> cyber signals, scores every cloud region in real time, and tells you exactly
+> which workloads to move, which to commit to reserved pricing, and what you save.
+> It's the only platform that solves cost, resilience, and commitment strategy together."
 
 ---
 
@@ -55,9 +55,22 @@ Our weighted composite score (Infrastructure 80% / Cyber 20%) is updated every
 We don't just show pretty charts. Every insight comes with a specific, executable
 recommendation:
 
-- *"Move Payments API from aws/us-west-2 to azure/eastus — save $80/mo, resilience 78 → 22"*
+- *"Move Payments API from aws/ap-southeast-2 to azure/eastus — save $340/mo, resilience 90 → 22"*
 - *"ML Training Job running at 4% CPU — $3,400/mo is 80% waste"*
+- *"ML Risk Scoring Engine: commit to 1-year reserved plan — save $4,116/yr guaranteed"*
+- *"Transaction Processor is in a CRITICAL region — commitment BLOCKED until migrated"*
 - *"PayStream acquisition has $298,480 Y1 cloud liability — 2 compliance gaps unresolved"*
+
+### Layer 4 — Risk-Gated Commitment Strategy
+The Reserved Instance / Savings Plan Optimizer is the industry's only commitment
+recommender that uses live risk data as a gate:
+
+- **NORMAL regions** → Safe to commit 1-year or 3-year (35–60% off on-demand)
+- **WATCH regions** → 1-year only, flagged for caution
+- **WARNING/CRITICAL** → Commitment BLOCKED — never lock spend into a region you may need to flee
+
+This prevents the single most expensive FinOps mistake: committing to a reserved
+instance right before a region becomes a reliability problem.
 
 ---
 
@@ -70,10 +83,11 @@ recommendation:
 | Signal sources | 4 live APIs (AWS/Azure/GCP Health + Cloudflare Radar) |
 | Risk score refresh | Every 5 minutes |
 | **Cost waste detected** | **$23,940/month (33.5% of spend)** |
+| **Commitment savings available** | **1-year: ~$26,000/yr · 3-year: ~$44,000/yr** |
+| Workloads commitment-blocked | 3 (in WARNING/CRITICAL regions — migrate first) |
 | Anomalies flagged | 3 active (CRITICAL + HIGH + MEDIUM) |
 | Anomaly excess cost | $918/day · $27,556/month projected |
 | M&A cloud liability | $298,480 net Year 1 |
-| Simulation savings | $366/month (infrastructure outage scenario) |
 | PDF analysis | 12-month projections from any financial document |
 
 ---

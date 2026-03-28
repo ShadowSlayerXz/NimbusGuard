@@ -258,6 +258,51 @@ export interface AnomalyScanResult {
   history: Record<string, DailySpend[]>
 }
 
+/* ── Commitment Optimizer ────────────────────────────── */
+
+export interface CommitmentOption {
+  term: "1-year" | "3-year"
+  discount_pct: number
+  monthly_cost_usd: number
+  monthly_saving_usd: number
+  annual_saving_usd: number
+  break_even_months: number
+}
+
+export interface WorkloadCommitment {
+  workload_id: string
+  workload_name: string
+  owner_team: string
+  provider: string
+  region: string
+  current_monthly_cost_usd: number
+  current_tier: string
+  commitment_status: "SAFE" | "CAUTION" | "BLOCKED"
+  commitment_reason: string
+  options: CommitmentOption[]
+  best_annual_saving_usd: number
+}
+
+export interface CommitmentSummary {
+  total_monthly_spend_usd: number
+  eligible_monthly_spend_usd: number
+  blocked_monthly_spend_usd: number
+  saving_1yr_monthly_usd: number
+  saving_1yr_annual_usd: number
+  saving_3yr_monthly_usd: number
+  saving_3yr_annual_usd: number
+  workloads_safe: number
+  workloads_caution: number
+  workloads_blocked: number
+}
+
+export interface CommitmentScanResult {
+  scan_id: string
+  scanned_at: string
+  summary: CommitmentSummary
+  workloads: WorkloadCommitment[]
+}
+
 export interface PdfAnalysisResult {
   filename: string
   pages_extracted: number

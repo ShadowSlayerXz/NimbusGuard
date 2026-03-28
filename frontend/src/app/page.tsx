@@ -2,13 +2,15 @@
 
 import { useState, useCallback } from "react"
 import useSWR from "swr"
-import { runCostScan, fetchLatestCostScan, runWasteScan, fetchLatestWasteScan, fetchPricingRates } from "@/lib/api"
+import { runCostScan, fetchLatestCostScan, runWasteScan, fetchLatestWasteScan, fetchPricingRates, fetchCommitments } from "@/lib/api"
 import type {
   CostScanResult,
   WorkloadCostAnalysis,
   CandidateRegion,
   WasteScanResult,
   WorkloadWasteAnalysis,
+  WorkloadCommitment,
+  CommitmentScanResult,
 } from "@/lib/types"
 import { formatUSD, formatRelativeTime } from "@/lib/utils"
 import ProviderBadge from "@/components/ProviderBadge"
@@ -318,6 +320,9 @@ export default function CostDashboard() {
   const { data: pricing } = useSWR("pricing-rates", fetchPricingRates, {
     refreshInterval: 3_600_000, revalidateOnFocus: false, shouldRetryOnError: false,
   })
+  const { data: commitments, mutate: mutateCommitments } = useSWR<CommitmentScanResult>(
+    "commitments", fetchCommitments, { shouldRetryOnError: false, revalidateOnFocus: false }
+  )
 
   const handleExport = useCallback(() => {
     if (!scan) return
@@ -352,15 +357,18 @@ export default function CostDashboard() {
     setScanning(true)
     setScanError(null)
     try {
-      const [costResult, wasteResult] = await Promise.all([runCostScan(), runWasteScan()])
+      const [costResult, wasteResult, commitResult] = await Promise.all([
+        runCostScan(), runWasteScan(), fetchCommitments(),
+      ])
       mutateCost(costResult, false)
       mutateWaste(wasteResult, false)
+      mutateCommitments(commitResult, false)
     } catch (e: unknown) {
       setScanError(e instanceof Error ? e.message : "Scan failed")
     } finally {
       setScanning(false)
     }
-  }, [mutateCost, mutateWaste])
+  }, [mutateCost, mutateWaste, mutateCommitments])
 
   const s = scan?.summary
   const analyses = scan?.workload_analyses ?? []
@@ -663,6 +671,109 @@ export default function CostDashboard() {
           <div style={{ fontSize: "0.8rem" }}>
             Click <strong style={{ color: "#e2e8f0" }}>Run Full Analysis</strong> to detect idle instances and right-sizing opportunities
           </div>
+        </div>
+      )}
+
+      {/* ── Section divider: Commitments ── */}
+      <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.07em", margin: "2rem 0 1rem", display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 16, height: 1, background: "#3f3f46", display: "inline-block" }} />
+        Reserved Instance &amp; Savings Plan Optimizer
+      </div>
+
+      {commitments ? (
+        <>
+          {/* Summary banner */}
+          <div style={{ background: "#111113", border: "1px solid #27272a", borderRadius: 14, padding: "1.25rem 1.5rem", marginBottom: "1.5rem" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+              <div>
+                <div style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                  Commitment Savings Opportunity
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                  <span style={{ fontSize: "2.2rem", fontWeight: 800, color: "#22c55e", lineHeight: 1 }}>
+                    {formatUSD(commitments.summary.saving_1yr_annual_usd)}
+                  </span>
+                  <span style={{ fontSize: "1rem", color: "#22c55e", fontWeight: 600 }}>/yr</span>
+                  <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#94a3b8" }}>
+                    ({formatUSD(commitments.summary.saving_1yr_monthly_usd)}/mo) with 1-year plan
+                  </span>
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "#94a3b8", marginTop: 4 }}>
+                  {formatUSD(commitments.summary.saving_3yr_annual_usd)}/yr available with 3-year plan &nbsp;&middot;&nbsp;
+                  <span style={{ color: "#f97316" }}>{formatUSD(commitments.summary.blocked_monthly_spend_usd)}/mo blocked by risk engine</span>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                {[
+                  { label: "Safe to Commit", value: commitments.summary.workloads_safe, color: "#22c55e" },
+                  { label: "Caution", value: commitments.summary.workloads_caution, color: "#f97316" },
+                  { label: "Risk Blocked", value: commitments.summary.workloads_blocked, color: "#ef4444" },
+                ].map(({ label, value, color }) => (
+                  <div key={label} style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "0.75rem 1rem", minWidth: 110 }}>
+                    <div style={{ fontSize: "0.65rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{label}</div>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 800, color }}>{value}</div>
+                    <div style={{ fontSize: "0.68rem", color: "#64748b", marginTop: 2 }}>workloads</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Per-workload commitment cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "0.75rem", marginBottom: "2rem" }}>
+            {commitments.workloads.map((w) => <CommitmentCard key={w.workload_id} wc={w} />)}
+          </div>
+        </>
+      ) : (
+        <div style={{ background: "#1e293b", border: "1px dashed #334155", borderRadius: 12, padding: "2.5rem", textAlign: "center", color: "#64748b", marginBottom: "2rem" }}>
+          <div style={{ fontSize: "1.5rem", marginBottom: 8 }}>&#128197;</div>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>No commitment analysis yet</div>
+          <div style={{ fontSize: "0.8rem" }}>Click <strong style={{ color: "#e2e8f0" }}>Run Full Analysis</strong> to find Reserved Instance savings</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CommitmentCard({ wc }: { wc: WorkloadCommitment }) {
+  const statusColor = wc.commitment_status === "SAFE" ? "#22c55e" : wc.commitment_status === "CAUTION" ? "#f97316" : "#ef4444"
+  const statusBg = wc.commitment_status === "SAFE" ? "rgba(34,197,94,0.08)" : wc.commitment_status === "CAUTION" ? "rgba(249,115,22,0.08)" : "rgba(239,68,68,0.08)"
+
+  return (
+    <div style={{ background: "#111113", border: `1px solid ${statusColor}22`, borderRadius: 12, padding: "1rem 1.25rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#e4e4e7", marginBottom: 2 }}>{wc.workload_name}</div>
+          <div style={{ fontSize: "0.72rem", color: "#52525b" }}>{wc.owner_team} &middot; {wc.provider.toUpperCase()}/{wc.region}</div>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <span style={{ fontSize: "0.62rem", fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: statusBg, color: statusColor, border: `1px solid ${statusColor}30`, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            {wc.commitment_status}
+          </span>
+          <span style={{ fontSize: "0.62rem", fontWeight: 600, padding: "2px 7px", borderRadius: 4, background: "rgba(255,255,255,0.04)", color: "#64748b", border: "1px solid #27272a", textTransform: "uppercase" }}>
+            {wc.current_tier}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ fontSize: "0.75rem", color: "#71717a", marginBottom: 10, lineHeight: 1.5 }}>
+        {wc.commitment_reason}
+      </div>
+
+      {wc.options.length > 0 ? (
+        <div style={{ display: "flex", gap: 8 }}>
+          {wc.options.map((opt) => (
+            <div key={opt.term} style={{ flex: 1, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 8, padding: "0.6rem 0.75rem" }}>
+              <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{opt.term}</div>
+              <div style={{ fontSize: "1rem", fontWeight: 800, color: "#22c55e" }}>{formatUSD(opt.annual_saving_usd)}<span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: 400 }}>/yr</span></div>
+              <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: 2 }}>{opt.discount_pct}% off &middot; {formatUSD(opt.monthly_saving_usd)}/mo</div>
+              <div style={{ fontSize: "0.68rem", color: "#52525b", marginTop: 2 }}>Break-even: {opt.break_even_months}mo</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ fontSize: "0.78rem", color: "#ef4444", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 6, padding: "0.5rem 0.75rem" }}>
+          Commitment blocked — resolve region risk first
         </div>
       )}
     </div>

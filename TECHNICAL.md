@@ -12,15 +12,16 @@ API contract, and technology decisions for NimbusGuard.
 3. [Risk Scoring Engine](#3-risk-scoring-engine)
 4. [Simulation Engine](#4-simulation-engine)
 5. [Cost Analysis Engine](#5-cost-analysis-engine)
-6. [Waste Analyzer](#6-waste-analyzer)
-7. [Anomaly Detection](#7-anomaly-detection)
-8. [M&A Due Diligence](#8-ma-due-diligence)
-9. [PDF Financial Intelligence (Gemini AI)](#9-pdf-financial-intelligence-gemini-ai)
-10. [Database Schema](#10-database-schema)
-11. [API Reference](#11-api-reference)
-12. [Frontend Architecture](#12-frontend-architecture)
-13. [Infrastructure & Deployment](#13-infrastructure--deployment)
-14. [Technology Decisions](#14-technology-decisions)
+6. [Commitment Optimizer](#6-commitment-optimizer)
+7. [Waste Analyzer](#7-waste-analyzer)
+8. [Anomaly Detection](#8-anomaly-detection)
+9. [M&A Due Diligence](#9-ma-due-diligence)
+10. [PDF Financial Intelligence (Groq AI)](#10-pdf-financial-intelligence-groq-ai)
+11. [Database Schema](#11-database-schema)
+12. [API Reference](#12-api-reference)
+13. [Frontend Architecture](#13-frontend-architecture)
+14. [Infrastructure & Deployment](#14-infrastructure--deployment)
+15. [Technology Decisions](#15-technology-decisions)
 
 ---
 
@@ -33,43 +34,43 @@ NimbusGuard is a 6-service containerized application organized into four process
 │ LAYER 1 · INGESTION                                                        │
 │                                                                             │
 │  Celery Beat triggers every 2–5 minutes                                    │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐  │
-│  │ AWS Health  │ │ NASA EONET  │ │   GDELT     │ │  Cloudflare Radar   │  │
-│  │ Azure Health│ │ NOAA Alerts │ │             │ │  (BGP hijack feed)  │  │
-│  │ GCP Status  │ │ USGS Seismic│ │             │ │                     │  │
-│  └──────┬──────┘ └──────┬──────┘ └──────┬──────┘ └──────────┬──────────┘  │
-│         └───────────────┴───────────────┴───────────────────┘             │
-│                                 ↓                                          │
+│  ┌──────────────────────────────┐  ┌──────────────────────────────────┐    │
+│  │ AWS Health · Azure Health    │  │  Cloudflare Radar                │    │
+│  │ GCP Status                   │  │  (BGP hijack / DDoS feed)        │    │
+│  │ (infrastructure signals)     │  │  (cyber signals)                 │    │
+│  └──────────────┬───────────────┘  └──────────────┬───────────────────┘    │
+│                 └──────────────────┬──────────────┘                        │
+│                                    ↓                                       │
 │                    Normalized RiskEvent records → PostgreSQL               │
-└─────────────────────────────────┬───────────────────────────────────────────┘
-                                  ↓
+└────────────────────────────────────┬────────────────────────────────────────┘
+                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ LAYER 2 · RISK SCORING                                                     │
 │                                                                             │
 │  Celery Beat triggers every 5 minutes                                      │
 │  RiskEvents (last 24h) → weighted formula → RegionRiskScore per region     │
+│  Infrastructure 80% · Cyber 20%                                            │
 │  Stored as TimescaleDB hypertable (append-only, full history preserved)    │
-└─────────────────────────────────┬───────────────────────────────────────────┘
-                                  ↓
+└────────────────────────────────────┬────────────────────────────────────────┘
+                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ LAYER 3 · ANALYSIS ENGINES  (FastAPI, on-demand)                          │
 │                                                                             │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────────────┐  │
-│  │  Cost Analyzer   │  │  Waste Analyzer  │  │   Anomaly Detector       │  │
-│  │  (inefficiency)  │  │  (utilization)   │  │   (Z-score baseline)     │  │
+│  │  Cost Analyzer   │  │ Commitment Engine │  │   Waste Analyzer         │  │
+│  │  (inefficiency)  │  │  (RI optimizer)  │  │   (utilization)          │  │
 │  └──────────────────┘  └──────────────────┘  └──────────────────────────┘  │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────────────┐  │
-│  │Simulation Engine │  │  M&A Analyzer    │  │   Gemini PDF Analysis    │  │
-│  │  (what-if runs)  │  │ (due diligence)  │  │   (AI cost extraction)   │  │
+│  │ Anomaly Detector │  │  M&A Analyzer    │  │   Groq PDF Analysis      │  │
+│  │  (Z-score)       │  │ (due diligence)  │  │   (llama-3.3-70b)        │  │
 │  └──────────────────┘  └──────────────────┘  └──────────────────────────┘  │
-└─────────────────────────────────┬───────────────────────────────────────────┘
-                                  ↓
+└────────────────────────────────────┬────────────────────────────────────────┘
+                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ LAYER 4 · PRESENTATION  (Next.js 16)                                      │
 │                                                                             │
-│  Cost Intel · Anomalies · M&A Report · Risk Map · Analyze PDF             │
-│  Workloads · Simulations · Live alert feed                                 │
-│  SWR polling (30s) · Zustand global state · Leaflet.js risk map            │
+│  Cost Intel (+ RI Optimizer) · Anomalies · M&A Report · Analyze PDF       │
+│  Workloads · SWR polling (30s) · Zustand global state                     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -92,14 +93,10 @@ NimbusGuard is a 6-service containerized application organized into four process
 
 | Source | Category | Weight | Polling interval | Free tier |
 |---|---|---|---|---|
-| AWS Health API | infrastructure | 45% | 5 min | Yes (requires AWS account) |
-| Azure Resource Health | infrastructure | 45% | 5 min | Yes (requires subscription) |
-| GCP Status Page | infrastructure | 45% | 5 min | Yes (public) |
-| NASA EONET | natural_disaster | 30% | 5 min | Yes (public) |
-| NOAA Alerts | natural_disaster | 30% | 5 min | Yes (public) |
-| USGS Earthquake Feeds | natural_disaster | 30% | 2 min | Yes (public) |
-| GDELT Project | geopolitical | 15% | 5 min | Yes (public) |
-| Cloudflare Radar | cyber | 10% | 5 min | Yes (free API key) |
+| AWS Health API | infrastructure | 80% | 5 min | Yes (public endpoint) |
+| Azure Resource Health | infrastructure | 80% | 5 min | Yes (public feed) |
+| GCP Status Page | infrastructure | 80% | 5 min | Yes (public) |
+| Cloudflare Radar | cyber | 20% | 5 min | Yes (free API key) |
 
 ### Normalization schema
 
@@ -108,8 +105,8 @@ Every ingester maps its raw API response to a `RiskEvent`:
 ```python
 class RiskEvent(Base):
     id: UUID
-    source: str            # "usgs" | "noaa" | "gdelt" | "cloudflare" | ...
-    category: str          # "infrastructure" | "natural_disaster" | "geopolitical" | "cyber"
+    source: str            # "aws_health" | "azure_health" | "gcp_status" | "cloudflare"
+    category: str          # "infrastructure" | "cyber"
     region_id: str         # Cloud region identifier (e.g., "us-west-2")
     provider: str          # "aws" | "azure" | "gcp" | "global"
     severity: float        # Normalized 0.0–1.0
@@ -149,16 +146,14 @@ def compute_region_score(region_id: str, provider: str, events: list[RiskEvent])
 
     # 2. For each category, take the maximum severity event
     category_max = {}
-    for cat in ["infrastructure", "natural_disaster", "geopolitical", "cyber"]:
+    for cat in ["infrastructure", "cyber"]:
         matching = [e.severity for e in recent if e.category == cat]
         category_max[cat] = max(matching, default=0.0)
 
     # 3. Apply weights
     raw = (
-        0.45 * category_max["infrastructure"] +
-        0.30 * category_max["natural_disaster"] +
-        0.15 * category_max["geopolitical"] +
-        0.10 * category_max["cyber"]
+        0.80 * category_max["infrastructure"] +
+        0.20 * category_max["cyber"]
     )
 
     # 4. Scale to 0–100 and clamp
@@ -291,7 +286,100 @@ class CostScanResult:
 
 ---
 
-## 6. Waste Analyzer
+## 6. Commitment Optimizer
+
+**File:** `backend/core/commitment_engine.py`
+
+Analyses every workload's eligibility for AWS Reserved Instances, Azure Reserved VM
+Instances, and GCP Committed Use Discounts — and gates every recommendation through
+the live risk score for that region.
+
+### Discount rates
+
+| Provider | 1-year term | 3-year term |
+|---|---|---|
+| AWS | 35% off on-demand | 60% off on-demand |
+| Azure | 35% off on-demand | 55% off on-demand |
+| GCP | 37% off on-demand | 55% off on-demand |
+
+### Risk-gated decision logic
+
+```python
+if tier in ("CRITICAL", "WARNING"):
+    status = "BLOCKED"          # Never commit to a region you may need to flee
+elif tier == "WATCH":
+    status = "CAUTION"          # 1-year only — shorter lock-in given elevated risk
+else:  # NORMAL
+    status = "SAFE"             # Both 1-year and 3-year are viable
+```
+
+This prevents the most expensive FinOps mistake: purchasing a 1- or 3-year reserved
+instance right before a region becomes a reliability problem.
+
+### Savings computation
+
+For each eligible workload and term length:
+
+```
+monthly_savings = monthly_cost × discount_rate
+annual_savings  = monthly_savings × 12
+break_even_months = commitment_upfront_cost / monthly_savings
+```
+
+Commitments are modelled as no-upfront (monthly billing) — the break-even is
+therefore immediate, and the savings are pure margin.
+
+### Output structure
+
+```python
+@dataclass
+class CommitmentScanResult:
+    scanned_at: datetime
+    total_workloads: int
+    eligible_workloads: int          # SAFE or CAUTION
+    blocked_workloads: int           # WARNING or CRITICAL regions
+    summary: CommitmentSummary
+    recommendations: list[WorkloadCommitment]
+
+@dataclass
+class CommitmentSummary:
+    potential_1yr_annual_savings_usd: float
+    potential_3yr_annual_savings_usd: float
+
+@dataclass
+class WorkloadCommitment:
+    workload_id: str
+    workload_name: str
+    provider: str
+    region: str
+    monthly_cost_usd: float
+    risk_tier: str
+    commitment_status: str           # SAFE | CAUTION | BLOCKED
+    options: list[CommitmentOption]
+    block_reason: str | None
+
+@dataclass
+class CommitmentOption:
+    term: str                        # "1yr" | "3yr"
+    discount_pct: float
+    monthly_savings_usd: float
+    annual_savings_usd: float
+    effective_monthly_usd: float
+```
+
+### Demo output (FinVault scenario)
+
+```
+Eligible for commitment: 11 workloads
+Blocked (WARNING/CRITICAL): 3 workloads
+
+1-year savings available: ~$26,000/yr
+3-year savings available: ~$44,000/yr
+```
+
+---
+
+## 7. Waste Analyzer
 
 **File:** `backend/core/waste_analyzer.py`
 
@@ -323,7 +411,7 @@ Total recoverable: $23,940/mo  (33.5% of total spend)
 
 ---
 
-## 7. Anomaly Detection
+## 8. Anomaly Detection
 
 **File:** `backend/core/anomaly_detector.py`
 
@@ -366,7 +454,7 @@ and recommended remediation steps.
 
 ---
 
-## 8. M&A Due Diligence
+## 9. M&A Due Diligence
 
 **File:** `backend/core/ma_analyzer.py`
 
@@ -404,7 +492,7 @@ standalone demo module that could be adapted for any real acquisition target.
 
 ---
 
-## 9. PDF Financial Intelligence (Gemini AI)
+## 10. PDF Financial Intelligence (Groq AI)
 
 **File:** `backend/api/analyze.py`
 
@@ -413,15 +501,15 @@ standalone demo module that could be adapted for any real acquisition target.
 ```
 1. Client uploads PDF via multipart/form-data (max 10 MB)
 2. pypdf extracts text from all pages
-3. Text truncated to 40,000 characters (Gemini context window management)
-4. Structured JSON prompt sent to gemini-1.5-flash
-5. Gemini returns JSON matching a rigid schema
+3. Text truncated to 12,000 characters
+4. Structured JSON prompt sent to llama-3.3-70b-versatile (Groq)
+5. Groq returns JSON matching a rigid schema
 6. Response validated and returned to client
 ```
 
 ### Prompt design
 
-The system prompt instructs Gemini to act as a cloud financial analyst and
+The system prompt instructs the model to act as a cloud financial analyst and
 return a strict JSON schema — no markdown, no commentary. The schema includes:
 
 ```json
@@ -448,12 +536,13 @@ return a strict JSON schema — no markdown, no commentary. The schema includes:
 }
 ```
 
-Model: `gemini-1.5-flash` (free tier, 15 RPM, 1M tokens/day).
-Async execution: `asyncio.to_thread()` wraps the synchronous `generate_content` call.
+Model: `llama-3.3-70b-versatile` via Groq (free tier, 30 RPM, 14,400 RPD).
+Async execution: `asyncio.to_thread()` wraps the synchronous Groq SDK call.
+API key: `GROQ_API_KEY` in `.env`.
 
 ---
 
-## 10. Database Schema
+## 11. Database Schema
 
 ### Tables
 
@@ -474,8 +563,8 @@ Async execution: `asyncio.to_thread()` wraps the synchronous `generate_content` 
 | Column | Type | Notes |
 |---|---|---|
 | id | UUID (PK) | |
-| source | VARCHAR | usgs / noaa / eonet / gdelt / cloudflare / aws_health / azure_health / gcp_status |
-| category | VARCHAR | infrastructure / natural_disaster / geopolitical / cyber |
+| source | VARCHAR | aws_health / azure_health / gcp_status / cloudflare |
+| category | VARCHAR | infrastructure / cyber |
 | region_id | VARCHAR | Cloud region identifier |
 | provider | VARCHAR | aws / azure / gcp / global |
 | severity | FLOAT | 0.0–1.0 normalized |
@@ -521,7 +610,7 @@ Queries for "latest score per region" use `DISTINCT ON (provider, region_id) ORD
 
 ---
 
-## 11. API Reference
+## 12. API Reference
 
 All responses: `{ "data": T, "error": string | null, "timestamp": string }`
 
@@ -567,6 +656,12 @@ GET  /api/cost/latest
 
 GET  /api/cost/waste-breakdown
      → WasteBreakdown
+
+GET  /api/cost/commitments
+     → CommitmentScanResult
+
+GET  /api/cost/pricing
+     → { source: string, fetched_at: string, multipliers: Record<string, number> }
 ```
 
 ### Waste Analysis
@@ -601,20 +696,6 @@ POST /api/analyze/pdf
      → PdfAnalysisResult
 ```
 
-### Simulations
-
-```
-POST /api/simulate
-     body: { event_id: string }
-     → SimulationResult
-
-GET  /api/simulate
-     → SimulationResult[]
-
-GET  /api/simulate/{id}
-     → SimulationResult
-```
-
 ### Migrations
 
 ```
@@ -627,7 +708,7 @@ PATCH /api/migrations/{id}/execute
 
 ---
 
-## 12. Frontend Architecture
+## 13. Frontend Architecture
 
 ### Stack
 
@@ -644,13 +725,11 @@ PATCH /api/migrations/{id}/execute
 
 | Route | Page | Key interaction |
 |---|---|---|
-| `/` | Cost Intelligence | Run waste/cost scans, view recommendations |
+| `/` | Cost Intelligence | Run waste/cost scans, RI optimizer, CSV export |
 | `/anomalies` | Anomaly Detection | Sparkline charts, Z-score anomaly cards |
 | `/ma` | M&A Due Diligence | Full PayStream Inc. cloud liability report |
-| `/map` | Risk Map | Leaflet globe, region pins by risk tier |
 | `/workloads` | Workloads | Inventory table, create/edit workloads |
-| `/simulations` | Simulations | What-if history, migration plans |
-| `/analyze` | Financial Intelligence | PDF drag-and-drop, AI analysis results |
+| `/analyze` | Financial Intelligence | PDF drag-and-drop, Groq AI analysis results |
 
 ### Data flow
 

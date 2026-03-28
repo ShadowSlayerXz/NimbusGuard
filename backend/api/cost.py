@@ -48,6 +48,17 @@ async def get_waste_breakdown(db: AsyncSession = Depends(get_db)):
     return ok(breakdown.model_dump())
 
 
+@router.get("/commitments")
+async def get_commitment_opportunities(db: AsyncSession = Depends(get_db)):
+    """Analyse all workloads for Reserved Instance / Savings Plan opportunities.
+    Risk-gates every recommendation — never commit to WARNING or CRITICAL regions.
+    """
+    from backend.core.commitment_engine import CommitmentEngine
+    engine = CommitmentEngine()
+    result = await engine.scan(db)
+    return ok(result.model_dump())
+
+
 @router.get("/pricing")
 async def get_pricing_rates():
     """Return live pricing multipliers per region with source and freshness info."""

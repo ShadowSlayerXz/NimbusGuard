@@ -105,8 +105,10 @@ The cost analyzer (`backend/core/cost_analyzer.py`) never recommends migrating t
 region with risk score ≥ 60. This safety constraint is the core product differentiator —
 do not remove it.
 
-Pricing is based on static multipliers in `backend/core/regions.py:REGION_COST_MULTIPLIERS`
-relative to `us-east-1 = 1.0`. There is no live pricing API call.
+Pricing uses `backend/core/pricing_client.py` — Azure rates are fetched live from
+`prices.azure.com/api/retail/prices` (no auth, 1-hour in-memory cache). AWS/GCP use
+calibrated static multipliers in `backend/core/regions.py:REGION_COST_MULTIPLIERS`
+relative to `us-east-1 = 1.0`.
 
 ### Modules with no DB dependency
 
@@ -114,12 +116,20 @@ relative to `us-east-1 = 1.0`. There is no live pricing API call.
 are fully self-contained — they return hardcoded demo data and synthetic time-series
 respectively. Their API routes (`/api/ma/report`, `/api/anomalies/scan`) require no DB session.
 
-### Gemini PDF analysis
+### Groq PDF analysis
 
-`backend/api/analyze.py` calls `google.generativeai` synchronously wrapped in
-`asyncio.to_thread()`. The API key is `GEMINI_API_KEY` in `.env`. The model is
-`gemini-1.5-flash`. The system prompt enforces a rigid JSON schema — if Gemini
-returns markdown fences, the handler strips them before `json.loads`.
+`backend/api/analyze.py` calls the Groq SDK (`groq.Groq`) synchronously wrapped in
+`asyncio.to_thread()`. The API key is `GROQ_API_KEY` in `.env`. The model is
+`llama-3.3-70b-versatile`. The system prompt enforces a rigid JSON schema — if the
+model returns markdown fences, the handler strips them before `json.loads`.
+
+### Commitment optimizer
+
+`backend/core/commitment_engine.py` scans all workloads for Reserved Instance /
+Savings Plan eligibility. It fetches the latest risk score for each workload's region
+and gates recommendations: CRITICAL/WARNING → BLOCKED, WATCH → 1-year only (CAUTION),
+NORMAL → both terms (SAFE). Discount rates are hardcoded in `DISCOUNTS` dict.
+The endpoint is `GET /api/cost/commitments` in `backend/api/cost.py`.
 
 ### Frontend state
 

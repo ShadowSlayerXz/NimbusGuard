@@ -50,13 +50,11 @@ much, gain this much resilience.*
 
 | Module | What It Does |
 |---|---|
-| **Risk Intelligence** | 8 live signal sources scored into a 0–100 composite risk score per cloud region, updated every 5 minutes |
-| **Cost Intelligence** | Scans all workloads for idle instances, right-sizing opportunities, and provider lock-in waste |
-| **Simulation Engine** | What-if migration scenarios: computes resilience gain + cost delta before you touch anything |
+| **Cost Intelligence** | Scans all workloads for idle instances, right-sizing opportunities, and provider lock-in waste. Uses live Azure pricing + static AWS/GCP rates. |
+| **Commitment Optimizer** | Analyses every workload for Reserved Instance / Savings Plan savings (35–60% off on-demand). Risk-gates every recommendation — never commits to WARNING/CRITICAL regions. |
 | **Anomaly Detection** | Statistical baseline (Z-score) flags unusual cost spikes in real-time with root cause hints |
 | **M&A Due Diligence** | Generates a cloud liability report for acquisition targets — compliance gaps, shadow IT, duplicate services |
-| **Financial Intelligence** | Upload any financial PDF (annual report, invoice, budget) and get AI-powered cost analysis and 12-month projections |
-| **Risk Map** | Interactive globe showing every monitored cloud region colored by live risk tier |
+| **Financial Intelligence** | Upload any financial PDF (annual report, invoice, budget) and get AI-powered cost analysis and 12-month projections (Groq Llama 3.3 70B) |
 
 ---
 
@@ -65,19 +63,19 @@ much, gain this much resilience.*
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │ Signal Ingestion  (Celery Beat · every 2–5 min)                 │
-│  AWS Health · Azure Health · GCP Status · NASA EONET            │
-│  NOAA Alerts · USGS Seismic · GDELT · Cloudflare Radar          │
+│  AWS Health · Azure Health · GCP Status · Cloudflare Radar      │
 └─────────────────────────┬────────────────────────────────────────┘
                           ↓
 ┌──────────────────────────────────────────────────────────────────┐
 │ Risk Scoring Engine  (Celery Beat · every 5 min)                │
 │  Weighted composite score per region → TimescaleDB hypertable   │
-│  Infrastructure 45% · Disasters 30% · Geopolitical 15% · Cyber 10%│
+│  Infrastructure 80% · Cyber 20%                                 │
 └─────────────────────────┬────────────────────────────────────────┘
                           ↓
 ┌──────────────────────────────────────────────────────────────────┐
 │ Analysis Engines  (on-demand via FastAPI)                       │
-│  Cost Analyzer · Waste Analyzer · Anomaly Detector              │
+│  Cost Analyzer · Waste Analyzer · Commitment Optimizer ·        │
+│  Anomaly Detector                                               │
 │  Simulation Engine · M&A Analyzer · Gemini PDF Analysis         │
 └─────────────────────────┬────────────────────────────────────────┘
                           ↓

@@ -11,6 +11,7 @@ import type {
   PdfAnalysisResult,
   MAReport,
   AnomalyScanResult,
+  CommitmentScanResult,
 } from "./types"
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
@@ -126,6 +127,13 @@ export async function runWasteScan(): Promise<WasteScanResult> {
 
 export async function fetchLatestWasteScan(): Promise<WasteScanResult> {
   const res = await fetch(`${BASE}/api/waste/latest`)
+  return unwrap(res)
+}
+
+/* ── Commitment Optimizer ────────────────────────────── */
+
+export async function fetchCommitments(): Promise<CommitmentScanResult> {
+  const res = await fetch(`${BASE}/api/cost/commitments`)
   return unwrap(res)
 }
 

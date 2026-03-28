@@ -8,7 +8,7 @@
 |---|---|
 | Frontend | Next.js 16, React 19, Tailwind CSS v4 |
 | Backend | Python 3.11, FastAPI, SQLAlchemy 2.0 |
-| AI | Google Gemini 1.5 Flash |
+| AI | Groq (llama-3.3-70b-versatile) |
 | Task Queue | Celery 5 + Redis 7 |
 | Database | PostgreSQL 15 + TimescaleDB |
 | Infrastructure | Docker Compose |
@@ -47,12 +47,6 @@ without a manual refresh.
 Lightweight global state store. Holds the current risk scores, workload
 list, and selected region so components don't re-fetch the same data
 independently.
-
-### Leaflet.js
-Open-source mapping library (no API key, no billing). Powers the Risk Map
-page — each of the 48 monitored cloud regions is rendered as a colored
-circle marker whose fill reflects the live risk tier (green → yellow →
-orange → red).
 
 ---
 
@@ -94,20 +88,18 @@ pull text from uploaded financial documents before sending to Gemini.
 
 ## AI
 
-### Google Gemini 2.0 Flash
+### Groq — llama-3.3-70b-versatile
 Used for the Financial Intelligence module. Receives extracted PDF text
 and returns a structured JSON analysis: cloud spend identification,
 12-month cost projections, risk factors, and optimization recommendations.
 
-- **Why Gemini:** Free tier (15 RPM, 1M tokens/day) with no credit card
-- **Why Flash:** Faster and cheaper than Gemini Pro; sufficient for
-  document summarization tasks
-- **Context window:** 1M tokens — handles large annual reports in one call
-- **Structured output:** Enforced via a rigid JSON schema in the system
-  prompt; markdown fences are stripped before parsing
-
-The `generate_content()` call is synchronous, so it runs in
-`asyncio.to_thread()` to avoid blocking the FastAPI event loop.
+- **Why Groq:** Genuinely free tier (30 RPM, 14,400 RPD) with no credit card required
+- **Why llama-3.3-70b:** Strong reasoning and instruction-following at zero cost;
+  outperforms smaller models for structured financial document analysis
+- **Structured output:** Enforced via a rigid JSON schema in the system prompt;
+  markdown fences are stripped before `json.loads`
+- **Async execution:** Groq SDK call is synchronous, wrapped in `asyncio.to_thread()`
+  to avoid blocking the FastAPI event loop
 
 ---
 
@@ -177,35 +169,31 @@ condition.
 
 ---
 
-## Pricing Data (Honest Note)
+## Pricing Data
 
-Cloud service prices are **not** pulled from a live API. The cost engine
-uses a static `REGION_COST_MULTIPLIERS` table in `backend/core/regions.py`
-— manually researched relative multipliers where `us-east-1 = 1.0`.
+The cost engine uses a hybrid pricing model implemented in `backend/core/pricing_client.py`.
+
+**Azure:** Live prices fetched from the Azure Retail Prices API (no auth required):
+```
+GET https://prices.azure.com/api/retail/prices?$filter=...
+```
+Results are cached in-memory for 1 hour. Falls back to static rates on failure.
+
+**AWS / GCP:** Well-researched static rates relative to `us-east-1 = 1.0`, embedded in
+`backend/core/regions.py`. These are calibrated against published on-demand pricing.
 
 ```
-aws/us-east-1   → 1.00  (baseline)
-aws/us-west-2   → 1.05
+aws/us-east-1      → 1.00  (baseline)
+aws/us-west-2      → 1.05
 aws/ap-northeast-1 → 1.25
-gcp/us-east1    → 0.95
-azure/eastus    → 1.00
-azure/brazilsouth → 1.28
+gcp/us-east1       → 0.95
+azure/eastus       → 1.00
+azure/brazilsouth  → 1.28
 ```
 
-Savings estimates are computed as:
-```
-saving = workload_cost × (1 - target_multiplier / current_multiplier)
-```
-
-The actual monthly cost per workload comes from the value stored when the
-workload was registered (seeded from the FinVault demo scenario).
-
-**Live pricing APIs exist and are free:**
-- Azure: `prices.azure.com/api/retail/prices`
-- GCP: `cloudbilling.googleapis.com/v1/services`
-- AWS: `pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/...`
-
-Integrating these is the next engineering milestone post-hackathon.
+The `GET /api/cost/pricing` endpoint exposes the current multipliers with source
+and `fetched_at` timestamp so the frontend can display a "Live Pricing" badge when
+Azure rates are fresh.
 
 ---
 
@@ -239,7 +227,7 @@ degrade gracefully when unavailable.
 | redis | ≥5.0 | Redis client |
 | alembic | ≥1.13 | DB migrations |
 | psycopg2-binary | ≥2.9 | Sync PG driver (Alembic) |
-| google-generativeai | ≥0.8 | Gemini AI |
+| groq | ≥0.9 | Groq AI SDK (llama-3.3-70b) |
 | pypdf | ≥4.0 | PDF text extraction |
 | python-multipart | ≥0.0.9 | File upload support |
 | textblob | ≥0.18 | NLP sentiment scoring |
@@ -253,7 +241,5 @@ degrade gracefully when unavailable.
 | react-dom | 19.2.4 | DOM renderer |
 | swr | ≥2.4 | Data fetching |
 | zustand | ≥5.0 | State management |
-| leaflet | ≥1.9 | Interactive maps |
-| react-leaflet | ≥5.0 | React Leaflet wrapper |
 | tailwindcss | ≥4.0 | CSS utilities |
 | typescript | ≥5.0 | Type safety |
