@@ -124,7 +124,7 @@ async def _call_gemini(extracted_text: str) -> dict:
         try:
             response = await asyncio.to_thread(
                 client.models.generate_content,
-                model="gemini-1.5-flash",
+                model="gemini-2.0-flash",
                 contents=prompt,
             )
             break
