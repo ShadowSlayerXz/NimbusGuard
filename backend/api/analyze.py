@@ -104,33 +104,43 @@ async def _call_gemini(extracted_text: str) -> dict:
         )
 
     try:
-        import google.generativeai as genai
+        from google import genai
     except ImportError:
-        raise HTTPException(status_code=503, detail="google-generativeai package not installed")
+        raise HTTPException(status_code=503, detail="google-genai package not installed")
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(
-        "gemini-2.0-flash",
-        system_instruction=_SYSTEM_PROMPT,
-    )
+    client = genai.Client(api_key=api_key)
 
-    truncated = extracted_text[:8000]  # free tier: ~1M tokens/day but 32k tokens/min limit
+    truncated = extracted_text[:8000]
     prompt = (
+        f"{_SYSTEM_PROMPT}\n\n"
         "Analyse the following financial document and return your findings "
         "as JSON exactly matching the schema in your instructions.\n\n"
         f"DOCUMENT TEXT:\n{truncated}"
     )
 
-    try:
-        response = await asyncio.to_thread(model.generate_content, prompt)
-    except Exception as exc:
-        err_str = str(exc)
-        if "429" in err_str or "quota" in err_str.lower() or "rate" in err_str.lower():
-            raise HTTPException(
-                status_code=429,
-                detail="Gemini API rate limit reached. Wait a minute and try again.",
+    # Retry with exponential backoff for free-tier rate limits
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            response = await asyncio.to_thread(
+                client.models.generate_content,
+                model="gemini-1.5-flash",
+                contents=prompt,
             )
-        raise HTTPException(status_code=502, detail=f"Gemini API error: {err_str[:200]}")
+            break
+        except Exception as exc:
+            last_exc = exc
+            err_str = str(exc)
+            if "429" in err_str or "quota" in err_str.lower() or "rate" in err_str.lower():
+                wait = 2 ** attempt * 5  # 5s, 10s, 20s
+                await asyncio.sleep(wait)
+                continue
+            raise HTTPException(status_code=502, detail=f"Gemini API error: {err_str[:200]}")
+    else:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Gemini API rate limit after 3 retries. Last error: {str(last_exc)[:300]}",
+        )
 
     raw = response.text.strip()
 
