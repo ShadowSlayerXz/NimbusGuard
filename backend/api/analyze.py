@@ -1,8 +1,8 @@
-"""Financial document analysis — PDF upload + Gemini AI.
+"""Financial document analysis — PDF upload + Groq AI.
 
 Accepts a PDF (annual report, cloud invoice, financial statement),
-extracts text, and asks Gemini to produce a structured cost analysis
-with predictions and optimization recommendations.
+extracts text, and asks Groq (Llama 3.3 70B) to produce a structured
+cost analysis with predictions and optimization recommendations.
 """
 
 from __future__ import annotations
@@ -95,54 +95,47 @@ Rules:
 - Be specific and actionable — vague advice is not useful."""
 
 
-async def _call_gemini(extracted_text: str) -> dict:
-    api_key = os.getenv("GEMINI_API_KEY", "")
-    if not api_key or api_key == "your_gemini_api_key_here":
+async def _call_groq(extracted_text: str) -> dict:
+    api_key = os.getenv("GROQ_API_KEY", "")
+    if not api_key or api_key == "your_groq_api_key_here":
         raise HTTPException(
             status_code=503,
-            detail="GEMINI_API_KEY is not configured. Add it to your .env file.",
+            detail="GROQ_API_KEY is not configured. Add it to your .env file.",
         )
 
     try:
-        from google import genai
+        from groq import Groq
     except ImportError:
-        raise HTTPException(status_code=503, detail="google-genai package not installed")
+        raise HTTPException(status_code=503, detail="groq package not installed")
 
-    client = genai.Client(api_key=api_key)
+    client = Groq(api_key=api_key)
+    truncated = extracted_text[:12000]
 
-    truncated = extracted_text[:8000]
-    prompt = (
-        f"{_SYSTEM_PROMPT}\n\n"
-        "Analyse the following financial document and return your findings "
-        "as JSON exactly matching the schema in your instructions.\n\n"
-        f"DOCUMENT TEXT:\n{truncated}"
-    )
-
-    # Retry with exponential backoff for free-tier rate limits
-    last_exc: Exception | None = None
-    for attempt in range(3):
-        try:
-            response = await asyncio.to_thread(
-                client.models.generate_content,
-                model="gemini-2.0-flash",
-                contents=prompt,
-            )
-            break
-        except Exception as exc:
-            last_exc = exc
-            err_str = str(exc)
-            if "429" in err_str or "quota" in err_str.lower() or "rate" in err_str.lower():
-                wait = 2 ** attempt * 5  # 5s, 10s, 20s
-                await asyncio.sleep(wait)
-                continue
-            raise HTTPException(status_code=502, detail=f"Gemini API error: {err_str[:200]}")
-    else:
-        raise HTTPException(
-            status_code=429,
-            detail=f"Gemini API rate limit after 3 retries. Last error: {str(last_exc)[:300]}",
+    def _sync_call() -> str:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": _SYSTEM_PROMPT},
+                {"role": "user", "content": (
+                    "Analyse the following financial document and return your findings "
+                    "as JSON exactly matching the schema in your instructions.\n\n"
+                    f"DOCUMENT TEXT:\n{truncated}"
+                )},
+            ],
+            temperature=0.2,
+            max_tokens=4096,
         )
+        return response.choices[0].message.content or ""
 
-    raw = response.text.strip()
+    try:
+        raw = await asyncio.to_thread(_sync_call)
+    except Exception as exc:
+        err_str = str(exc)
+        if "429" in err_str or "rate" in err_str.lower():
+            raise HTTPException(status_code=429, detail="Groq rate limit reached. Wait a moment and try again.")
+        raise HTTPException(status_code=502, detail=f"Groq API error: {err_str[:200]}")
+
+    raw = raw.strip()
 
     # Strip accidental markdown fences
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
@@ -176,5 +169,5 @@ async def analyze_pdf(file: UploadFile = File(...)):
             "Scanned/image-only PDFs are not supported — please use a text-based PDF."
         )
 
-    analysis = await _call_gemini(extracted)
+    analysis = await _call_groq(extracted)
     return ok({"filename": file.filename, "pages_extracted": extracted.count("[Page "), "analysis": analysis})
