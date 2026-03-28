@@ -7,6 +7,8 @@ import type {
   Workload,
   SimulationResult,
   MigrationLog,
+  CostScanResult,
+  WasteBreakdown,
 } from "./types"
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
@@ -117,5 +119,28 @@ export async function executeMigration(id: string): Promise<MigrationLog> {
   const res = await fetch(`${BASE}/api/migrations/${id}/execute`, {
     method: "PATCH",
   })
+  return unwrap(res)
+}
+
+/* ── Cost Inefficiency Engine ────────────────────────── */
+
+export async function runCostScan(
+  workloadIds?: string[],
+): Promise<CostScanResult> {
+  const res = await fetch(`${BASE}/api/cost/scan`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(workloadIds ? { workload_ids: workloadIds } : {}),
+  })
+  return unwrap(res)
+}
+
+export async function fetchLatestCostScan(): Promise<CostScanResult> {
+  const res = await fetch(`${BASE}/api/cost/latest`)
+  return unwrap(res)
+}
+
+export async function fetchWasteBreakdown(): Promise<WasteBreakdown> {
+  const res = await fetch(`${BASE}/api/cost/waste-breakdown`)
   return unwrap(res)
 }

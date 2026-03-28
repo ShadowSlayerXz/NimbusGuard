@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation"
 import LiveBadge from "./LiveBadge"
 
 const links = [
-  { href: "/", label: "Dashboard" },
-  { href: "/map", label: "Map" },
+  { href: "/", label: "Cost Intel" },
+  { href: "/map", label: "Risk Map" },
   { href: "/workloads", label: "Workloads" },
   { href: "/simulations", label: "Simulations" },
 ]
