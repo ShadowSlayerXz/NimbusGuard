@@ -298,6 +298,41 @@ None
 - Leaflet dynamic import with `ssr: false` to avoid SSR hydration issues.
 - useSWR with 30s refresh for live data updates on both dashboard and map.
 
+---
+
+## Task 9 — Dashboard Components + README
+**Status**: ✅ Complete
+**Date**: 2026-03-28
+
+### Files Created
+- frontend/src/components/StatCard.tsx
+- frontend/src/components/AlertFeed.tsx
+- frontend/src/components/WorkloadTable.tsx
+- frontend/src/components/CostResilienceCard.tsx
+- frontend/src/components/SimulationPanel.tsx
+- frontend/src/app/page.tsx (updated — 6 stat cards, alert feed, cost card, workloads)
+- frontend/src/app/workloads/page.tsx
+- frontend/src/app/simulations/page.tsx
+- README.md
+
+### Test Results
+- [x] 6 stat cards with real data → pass ✅ (30 regions, 50 signals, $5,490 spend, $366 savings)
+- [x] AlertFeed with category badges → pass ✅ (NATURAL DISASTER badges, severity bars)
+- [x] WorkloadTable cost + risk tier → pass ✅ (3 workloads, NORMAL tier, $5,490/mo total)
+- [x] CostResilienceCard before/after → pass ✅ (resilience 75→100, 3 migration recommendations)
+- [x] Approve All button → pass ✅ (gradient button visible)
+- [x] Simulate page end-to-end → pass ✅ (event dropdown, run button, history table 75→100 -$366/mo)
+- [x] Workloads add form → pass ✅ (+ Add Workload button, inline form)
+
+### Errors Encountered
+None
+
+### Notes
+- CostResilienceCard shows per-workload migration cost breakdown (Payments -$80, ML -$227, Auth -$59)
+- Simulation history shows past runs with resilience before→after and cost delta
+- All pages use SWR for auto-refreshing data
+
+
 
 
 
