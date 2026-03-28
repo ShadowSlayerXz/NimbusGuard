@@ -332,6 +332,38 @@ None
 - Simulation history shows past runs with resilience before→after and cost delta
 - All pages use SWR for auto-refreshing data
 
+---
+
+## Task 10 — Seed Data + Demo Scenario + README
+**Status**: ✅ Complete
+**Date**: 2026-03-28
+
+### Files Created
+- backend/db/seed.py (rewritten — full demo dataset)
+- backend/db/reset.py
+- demo/DEMO_SCRIPT.md
+- README.md (rewritten — problem/solution framing)
+
+### Test Results
+- [x] seed.py runs without errors → pass ✅
+- [x] 6 events inserted (usgs, noaa, gdelt, aws_health, cloudflare, usgs) → pass ✅
+- [x] 30 region scores inserted (1 CRITICAL, 2 WARNING, 2 WATCH, 25 NORMAL) → pass ✅
+- [x] 3 workloads inserted ($5,490/mo total) → pass ✅
+- [x] simulation pre-runs and prints ID → pass ✅ (843a77c4)
+- [x] dashboard loads with seeded data → pass ✅
+- [x] CostResilienceCard shows pre-run simulation (22→91, -$52/mo) → pass ✅
+- [x] Map shows WARNING/CRITICAL/WATCH colored markers → pass ✅
+- [x] Workloads show WARNING tier + "At Risk" status → pass ✅
+
+### Errors Encountered
+None
+
+### Notes
+- Simulation results vary slightly based on random low scores for non-demo regions
+- All 5 signal categories visible in AlertFeed with correct badge colors
+- us-west-2 WARNING (78), ap-southeast-1 CRITICAL (82), eu-central-1 WATCH (48), eu-west-1 WATCH (44)
+
+
 
 
 
