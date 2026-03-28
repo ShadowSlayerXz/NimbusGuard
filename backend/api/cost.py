@@ -46,3 +46,19 @@ async def get_waste_breakdown(db: AsyncSession = Depends(get_db)):
     analyzer = CostAnalyzer()
     breakdown = await analyzer.get_waste_breakdown(db)
     return ok(breakdown.model_dump())
+
+
+@router.get("/pricing")
+async def get_pricing_rates():
+    """Return live pricing multipliers per region with source and freshness info."""
+    from backend.core import pricing_client
+    mults, source, fetched_at = await pricing_client.get_multipliers()
+    return ok({
+        "multipliers": mults,
+        "source": source,
+        "fetched_at": fetched_at.isoformat(),
+        "baseline": "AWS us-east-1 t3.medium on-demand = 1.0",
+        "azure_note": "Azure prices fetched live from Azure Retail Prices API",
+        "aws_note": "AWS prices from official pricing (t3.medium on-demand)",
+        "gcp_note": "GCP prices from official pricing (e2-medium on-demand)",
+    })

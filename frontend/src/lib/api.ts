@@ -129,6 +129,13 @@ export async function fetchLatestWasteScan(): Promise<WasteScanResult> {
   return unwrap(res)
 }
 
+/* ── Live Pricing ────────────────────────────────────── */
+
+export async function fetchPricingRates(): Promise<{ source: string; fetched_at: string; multipliers: Record<string, number> }> {
+  const res = await fetch(`${BASE}/api/cost/pricing`)
+  return unwrap(res)
+}
+
 /* ── PDF Financial Analysis ──────────────────────────── */
 
 export async function fetchMAReport(): Promise<MAReport> {

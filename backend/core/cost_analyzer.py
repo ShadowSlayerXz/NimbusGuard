@@ -16,6 +16,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.regions import REGION_COST_MULTIPLIERS, REGIONS
+from backend.core import pricing_client
 from backend.models.region_risk_score import RegionRiskScore
 from backend.models.workload import Workload
 from backend.schemas.cost import (
@@ -76,6 +77,9 @@ class CostAnalyzer:
             (s.provider, s.region_id): s for s in scores
         }
 
+        # ── 2b. Fetch live pricing multipliers ──────────────────────
+        multipliers, _price_source, _price_time = await pricing_client.get_multipliers()
+
         # Flat list of all (provider, region) candidates
         all_pairs: list[tuple[str, str]] = [
             (provider, region)
@@ -87,7 +91,7 @@ class CostAnalyzer:
         analyses: list[WorkloadCostAnalysis] = []
 
         for wl in workloads:
-            current_mult = REGION_COST_MULTIPLIERS.get(wl.current_region, 1.0)
+            current_mult = multipliers.get(wl.current_region, REGION_COST_MULTIPLIERS.get(wl.current_region, 1.0))
             current_cost = wl.monthly_cost_usd
 
             cur_risk = risk_map.get((wl.current_provider, wl.current_region))
@@ -102,7 +106,7 @@ class CostAnalyzer:
                 if provider == wl.current_provider and region == wl.current_region:
                     continue
 
-                target_mult = REGION_COST_MULTIPLIERS.get(region, 1.0)
+                target_mult = multipliers.get(region, REGION_COST_MULTIPLIERS.get(region, 1.0))
                 estimated_cost = current_cost * (target_mult / current_mult)
                 saving_usd = current_cost - estimated_cost
                 saving_pct = (saving_usd / current_cost * 100) if current_cost > 0 else 0.0

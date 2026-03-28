@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 import useSWR from "swr"
-import { runCostScan, fetchLatestCostScan, runWasteScan, fetchLatestWasteScan } from "@/lib/api"
+import { runCostScan, fetchLatestCostScan, runWasteScan, fetchLatestWasteScan, fetchPricingRates } from "@/lib/api"
 import type {
   CostScanResult,
   WorkloadCostAnalysis,
@@ -315,6 +315,38 @@ export default function CostDashboard() {
   const { data: waste, isLoading: wasteLoading, mutate: mutateWaste } = useSWR<WasteScanResult>(
     "waste-latest", fetchLatestWasteScan, { shouldRetryOnError: false, revalidateOnFocus: false }
   )
+  const { data: pricing } = useSWR("pricing-rates", fetchPricingRates, {
+    refreshInterval: 3_600_000, revalidateOnFocus: false, shouldRetryOnError: false,
+  })
+
+  const handleExport = useCallback(() => {
+    if (!scan) return
+    const rows: string[][] = [
+      ["Workload", "Team", "Provider", "Region", "Monthly Cost (USD)", "Status", "Best Saving (USD)", "Best Saving (%)", "Top Recommendation"],
+    ]
+    for (const a of scan.workload_analyses) {
+      const top = a.top_recommendations[0]
+      rows.push([
+        a.workload_name,
+        a.owner_team,
+        a.current_provider.toUpperCase(),
+        a.current_region,
+        a.current_monthly_cost_usd.toFixed(2),
+        a.inefficiency_type,
+        a.best_saving_usd.toFixed(2),
+        a.best_saving_pct.toFixed(1),
+        top ? `Move to ${top.provider}/${top.region} — save $${top.saving_usd.toFixed(0)}/mo` : "Optimal",
+      ])
+    }
+    const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `nimbusguard-cost-scan-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [scan])
 
   const handleScan = useCallback(async () => {
     setScanning(true)
@@ -367,16 +399,41 @@ export default function CostDashboard() {
                 &middot; last scan {formatRelativeTime(scan.scanned_at)}
               </span>
             )}
+            {pricing && (
+              <span style={{
+                marginLeft: 10,
+                fontSize: "0.7rem", fontWeight: 600,
+                color: pricing.source === "live" ? "#22c55e" : "#94a3b8",
+                border: `1px solid ${pricing.source === "live" ? "#22c55e40" : "#33333a"}`,
+                borderRadius: 4, padding: "1px 6px",
+              }}>
+                {pricing.source === "live" ? "● Live Pricing" : pricing.source === "cached" ? "● Cached Pricing" : "○ Static Pricing"}
+              </span>
+            )}
           </p>
         </div>
-        <button
-          onClick={handleScan}
-          disabled={scanning}
-          className="btn-primary"
-          style={{ opacity: scanning ? 0.5 : 1 }}
-        >
-          {scanning ? "Scanning..." : "Run Full Analysis"}
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          {scan && (
+            <button
+              onClick={handleExport}
+              style={{
+                padding: "0.5rem 1.1rem", borderRadius: 7, fontWeight: 600,
+                fontSize: "0.82rem", background: "#18181b", color: "#a1a1aa",
+                border: "1px solid #27272a", cursor: "pointer",
+              }}
+            >
+              Export CSV
+            </button>
+          )}
+          <button
+            onClick={handleScan}
+            disabled={scanning}
+            className="btn-primary"
+            style={{ opacity: scanning ? 0.5 : 1 }}
+          >
+            {scanning ? "Scanning..." : "Run Full Analysis"}
+          </button>
+        </div>
       </div>
 
       {scanError && <div className="error-box" style={{ marginBottom: "1rem" }}>{scanError}</div>}
